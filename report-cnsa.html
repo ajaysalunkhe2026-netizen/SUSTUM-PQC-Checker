@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SUSTUM PQC Checker Report</title>
+  <style>
+    body { font-family: Inter, Segoe UI, Arial, sans-serif; background:#f4f7fb; color:#122033; margin:0; }
+    .top { background:#fff; padding:16px 24px; border-bottom:1px solid #e6edf5; display:flex; justify-content:space-between; }
+    .wrap { padding:24px; }
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .card { background:#fff; border:1px solid #e6edf5; border-radius:16px; padding:16px; margin-top:14px; }
+    b.num { display:block; font-size:30px; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { border-top:1px solid #e6edf5; text-align:left; padding:10px; font-size:13px; }
+    .yes { color:#b42318; font-weight:700; }
+    .no { color:#067647; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <strong>SUSTUM PQC Checker — Report</strong>
+    <span>Part: sample-part | Guideline: CNSA | Decision: Go</span>
+  </div>
+  <div class="wrap">
+    <div class="kpis">
+      <div class="card">Total Findings<b class="num">1</b></div>
+      <div class="card">Quantum-Vulnerable<b class="num">1</b></div>
+      <div class="card">Already Safe<b class="num">0</b></div>
+      <div class="card">Confirmed / Suspected<b class="num">1 / 0</b></div>
+    </div>
+    <div class="card">
+      <h3>A. Classical View — Inventory</h3>
+      <table>
+        <tr><th>Location</th><th>Asset Type</th><th>Algorithm</th><th>Key Size</th><th>Purpose</th><th>Protocol</th><th>Library</th><th>Vulnerable</th><th>Confidence</th><th>Notes</th></tr>
+        
+        <tr>
+          <td>jwt.py:1</td>
+          <td>Algorithm</td>
+          <td>RSA-2048</td>
+          <td>2048</td>
+          <td>Signature</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="yes">Yes</td>
+          <td>Confirmed</td>
+          <td>Pattern match in code</td>
+          
+        </tr>
+        
+      </table>
+    </div>
+    <div class="card">
+      <h3>B. Recommendation View</h3>
+      <table>
+        <tr><th>Location</th><th>Asset Type</th><th>Algorithm</th><th>Key Size</th><th>Purpose</th><th>Protocol</th><th>Library</th><th>Vulnerable</th><th>Confidence</th><th>Notes</th><th>Mode</th><th>Recommendation</th></tr>
+        
+        <tr>
+          <td>jwt.py:1</td>
+          <td>Algorithm</td>
+          <td>RSA-2048</td>
+          <td>2048</td>
+          <td>Signature</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="yes">Yes</td>
+          <td>Confirmed</td>
+          <td>Pattern match in code</td>
+          <td>Pure PQC</td><td>ML-DSA-87</td>
+        </tr>
+        
+      </table>
+    </div>
+    <div class="card">
+      <h3>C. Impact Summary</h3>
+      <p>Overall SUSTUM impact is a basic note only. Shared libraries and other modules were not fully analyzed.</p>
+      <p><b>Expected files/config in this part:</b></p>
+      <ul><li>jwt.py</li></ul>
+    </div>
+    <div class="card">
+      <h3>D. Decision</h3>
+      <p><b>Go</b></p>
+      <p>Confirmed findings have clear guideline recommendations and limited selected-part impact.</p>
+      <p>This tool is advisory only. It did not apply any change.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Python Virtual Environment
+.venv/
+__pycache__/
+*.pyc
+
+# Temporary or Generated Reports
+report.html
+test_repo.zip
+dummy_repo/
