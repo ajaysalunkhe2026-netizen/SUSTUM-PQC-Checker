@@ -11,9 +11,11 @@ import os
 import re
 import tokenize
 
+from dependency_inventory import parse_manifest
+
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "venv", ".venv", "dist", "build", "target"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh", ".json", ".yaml", ".yml", ".env", ".properties"}
-DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "Pipfile", "package.json", "go.mod"}
+DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "Pipfile", "Pipfile.lock", "package.json", "package-lock.json", "npm-shrinkwrap.json", "go.mod", "go.sum"}
 
 # API-specific patterns are intentionally more conservative than keyword matching.
 # Each tuple: regex, algorithm, purpose, quantum-vulnerable indicator, confidence.
@@ -511,6 +513,9 @@ def scan_directory(target_dir):
                 all_findings.extend(parse_requirements_txt(fullpath, rel_path))
             elif lower == "go.mod":
                 all_findings.extend(parse_go_mod(fullpath, rel_path))
+            elif lower in {"pyproject.toml", "pipfile", "pipfile.lock",
+                           "package-lock.json", "npm-shrinkwrap.json", "go.sum"}:
+                all_findings.extend(parse_manifest(fullpath, rel_path))
             elif os.path.splitext(lower)[1] in SOURCE_EXTENSIONS:
                 all_findings.extend(scan_file(fullpath, rel_path))
     return all_findings
