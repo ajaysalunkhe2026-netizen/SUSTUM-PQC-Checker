@@ -18,11 +18,11 @@ Existing strengths:
 - The source-backed benchmark currently has 61 curated excerpt cases; its labels have not received independent second-reviewer sign-off.
 
 Observed gaps to address:
-- Dependency inventory currently parses package.json, requirements.txt and go.mod in the active scanner path. The code advertises pyproject.toml and Pipfile in a constant, but those formats are not dispatched by scan_directory.
-- Lockfiles and reliable transitive dependency resolution are not yet supported.
-- Dependency records do not consistently distinguish declared constraints from resolved versions, direct from transitive dependencies, or production from development scope.
+- Dependency inventory now dispatches requirements.txt, package.json, go.mod, pyproject.toml, Pipfile, Pipfile.lock, npm package-lock/shrinkwrap and go.sum. This is format-specific parsing, not package-manager execution or complete dependency graph resolution.
+- Selected formats retain declared-versus-locked version semantics, ecosystem, source kind, scope and relationship. npm lock package paths are retained as instance provenance; edge cases and package-manager-version coverage remain incomplete.
+- Initial malformed TOML/JSON manifest inputs produce scanner diagnostics, but diagnostic coverage is not exhaustive.
 - Cryptographic findings are represented as CycloneDX cryptographic-asset components with SUSTUM properties. Schema validity alone does not establish semantic completeness, provenance quality, or interoperability with other CBOM producers/consumers.
-- Finding identity and relationships need a stable model; current component references are generated from scan iteration order.
+- CBOM component references are now deterministically derived from component identity and evidence location, and output ordering is normalized. The model still needs a formal normalized relationship graph and external semantic/interoperability validation.
 - The upload API has no authentication, authorization, tenant isolation, persistent audit trail, or production deployment controls.
 - Static source/manifest analysis cannot discover runtime-loaded keys, remote cryptographic services, HSM state, binary-only usage, or prove reachability.
 
@@ -112,6 +112,12 @@ Completed on `feature/reliable-pqc-cbom`:
 
 Remaining in this area: preserve npm package-instance identity through CBOM serialization, add package-manager/version-specific fixtures, cover more malformed shapes, and validate dependency relationships against real lockfiles. The sprint does not establish complete dependency resolution or production readiness.
 
-## 6. Immediate next implementation task
+## 7. Independent validation handoff readiness
 
-Begin Phase 0 by freezing the current benchmark baseline and defining an independent label-review protocol. In parallel, start Phase 1 with dependency parser fixtures and a normalized dependency record that preserves declared-versus-resolved version and provenance. Keep changes on `feature/reliable-pqc-cbom`; leave `main` untouched.
+A reviewer guide is available in [INDEPENDENT_VALIDATION_HANDOFF.md](INDEPENDENT_VALIDATION_HANDOFF.md). It defines the candidate scope, reproduction commands, blind label-review protocol, annotation rubric, known limitations and report template. The 61-case benchmark is frozen for the first external review; reviewers should annotate source excerpts before seeing scanner output and must not use this set for detector tuning.
+
+The current candidate remains a pre-release static-analysis prototype. The handoff guide does not claim production readiness or complete CBOM interoperability. The independent reviewer must run all commands against the exact candidate commit and report results, not reuse historical metrics as a fresh validation outcome.
+
+## 8. Immediate next implementation task
+
+Before sending the candidate externally, record the final candidate commit SHA and successful CI run. Then ask the independent reviewer to perform blind corpus annotation, run the reproducibility commands, inspect false positives/false negatives, and test CycloneDX output with an independent consumer. Keep all remediation on `feature/reliable-pqc-cbom`; leave `main` untouched.
