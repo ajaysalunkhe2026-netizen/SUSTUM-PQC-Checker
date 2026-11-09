@@ -438,7 +438,7 @@ def scan_file(filepath, relative_path=None):
     unique = {}
     for item in findings:
         if item.get("algorithm") == "DSA" and re.search(
-            r"\\b(?:ML-DSA(?:-44|-65|-87)?|SLH-DSA(?:-[A-Z0-9-]+)?)\\b",
+            r"\b(?:ML-DSA(?:-44|-65|-87)?|SLH-DSA(?:-[A-Z0-9-]+)?)\b",
             str(item.get("evidence", "")), re.I
         ):
             continue
