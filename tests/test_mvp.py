@@ -119,6 +119,26 @@ class ScannerTests(unittest.TestCase):
                 handle.write("# RSA-2048 is mentioned only in this comment\nprint('hello')\n")
             self.assertEqual(scan_directory(root), [])
 
+    def test_multiline_javascript_block_comment_is_not_a_crypto_finding(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "comment.js"), "w", encoding="utf-8") as handle:
+                handle.write("/*\\ncrypto.generateKeyPairSync('rsa');\\n*/\\nconst answer = 42;\\n")
+            self.assertEqual(scan_directory(root), [])
+
+    def test_javascript_api_after_multiline_comment_is_still_detected(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto.js"), "w", encoding="utf-8") as handle:
+                handle.write("/* unrelated comment\\ncontinues here */\\ncrypto.generateKeyPairSync('rsa', {});\\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" for x in findings), findings)
+
+    def test_comment_markers_inside_javascript_string_do_not_hide_api(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto.js"), "w", encoding="utf-8") as handle:
+                handle.write('const url = "https://example.test/a"; crypto.generateKeyPairSync(\'rsa\', {});\\n')
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" for x in findings), findings)
+
     def test_dependency_is_inventory_not_vulnerability_proof(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "requirements.txt"), "w", encoding="utf-8") as handle:
