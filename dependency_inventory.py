@@ -131,13 +131,18 @@ def parse_npm_lock(path, rel_path):
     # resolved package instances. Root package (empty key) is not a dependency.
     packages = data.get("packages")
     if isinstance(packages, dict):
+        root = packages.get("") or {}
+        direct_names = set()
+        for group in ("dependencies", "devDependencies", "optionalDependencies"):
+            direct_names.update((root.get(group) or {}).keys())
         for package_path, item in packages.items():
             if not package_path or not isinstance(item, dict):
                 continue
             marker = "node_modules/"
             if marker in package_path:
                 name = package_path.rsplit(marker, 1)[-1]
-                rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json packages", "transitive-or-direct"))
+                relationship = "direct" if name in direct_names else "transitive"
+                rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json packages", relationship))
         return rows
     # npm lockfile v1 stores a nested dependencies tree.
     def walk(dependencies, relationship):
