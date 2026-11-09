@@ -1,14 +1,11 @@
 """Guideline mapping is advisory and deliberately conservative."""
 NIST_RULES = [
-    (("RSA", "Signature"), "ML-DSA-65", "PQC candidate", "Evaluate ML-DSA-65 under NIST FIPS 204; check protocol and interoperability."),
-    (("RSA", "Signature / key transport"), "Review key usage; evaluate ML-DSA for signatures or ML-KEM for key establishment", "Manual review", "RSA may serve multiple purposes; do not infer replacement from algorithm name alone."),
     (("ECDSA", "Signature"), "ML-DSA-65", "PQC candidate", "Evaluate ML-DSA-65 under NIST FIPS 204."),
     (("ECDH", "Key establishment"), "ML-KEM-768 or an approved hybrid design", "PQC candidate", "Evaluate ML-KEM under NIST FIPS 203 and protocol-specific hybrid guidance."),
     (("SHA-1", "Hash"), "SHA-256 or SHA-384", "Review", "SHA-1 is deprecated for collision-resistant use; assess protocol and compatibility."),
 ]
 CNSA_RULES = [
-    (("RSA", "Signature"), "ML-DSA-87", "PQC candidate", "Evaluate CNSA 2.0 profile applicability and transition requirements."),
-    (("ECDSA", "Signature"), "ML-DSA-87", "PQC candidate", "Evaluate CNSA 2.0 profile applicability."),
+    (("ECDSA", "Signature"), "ML-DSA-87", "PQC candidate", "Evaluate CNSA 2.0 profile applicability and transition requirements."),
     (("ECDH", "Key establishment"), "ML-KEM-1024 with approved transition design", "PQC candidate", "Confirm CNSA 2.0 requirements and protocol profile."),
     (("SHA-1", "Hash"), "SHA-384 or SHA-512", "Review", "Assess CNSA 2.0 requirements and protocol context."),
 ]
@@ -21,6 +18,10 @@ def match_rule(item, rules):
         return "Manual review", "Pending", "Scanner diagnostic or non-algorithm indicator; no migration mapping applied."
     algo = str(item.get("algorithm", "")).upper()
     purpose = str(item.get("purpose", ""))
+    # RSA key generation alone does not reveal whether the key is used for
+    # signatures, encryption, or key transport. Never infer ML-DSA vs ML-KEM.
+    if algo == "RSA":
+        return "Determine actual RSA key usage before selecting a replacement", "Manual review", "RSA can support different operations; static key-generation evidence is insufficient to choose a PQC replacement."
     for (needle, expected_purpose), rec, mode, reason in rules:
         if needle.upper() in algo and expected_purpose.lower() in purpose.lower():
             return rec, mode, reason
@@ -65,11 +66,11 @@ def impact(items):
 
 
 def generate_sbom(items, part_name="sample-part"):
-    """Return a CycloneDX 1.6 JSON-compatible component inventory.
+    """Return a CycloneDX 1.6 JSON-compatible component inventory candidate.
 
     Dependency versions are retained only when declared. Source findings are
-    represented as components with evidence properties; they are not asserted
-    to be package identities or proven runtime use.
+    represented as cryptographic-asset components with evidence properties.
+    Schema validation is a separate required verification step.
     """
     components = []
     seen = set()
@@ -77,7 +78,6 @@ def generate_sbom(items, part_name="sample-part"):
         if item.get("asset_type") == "Dependency":
             name = item.get("library") or item.get("algorithm") or "unknown-dependency"
             version = item.get("version", "unknown")
-            purl = None
             key = ("library", name, version)
             if key in seen:
                 continue
