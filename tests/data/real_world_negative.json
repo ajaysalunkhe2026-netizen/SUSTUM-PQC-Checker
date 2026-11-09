@@ -1,5 +1,5 @@
 {
-  "description": "Source-backed negative controls from non-cryptographic utility modules. Cases are file excerpts, not claims that the parent repositories contain no cryptography.",
+  "description": "Source-backed negative controls from selected upstream utility excerpts. A negative label applies only to the cited excerpt, not the whole repository.",
   "cases": [
     {
       "id": "rw-neg-001",
@@ -13,9 +13,10 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 5,
         "line_end": 16,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/src/cryptography/utils.py#L5-L16"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-002",
@@ -29,9 +30,10 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 5,
         "line_end": 16,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/src/cryptography/exceptions.py#L5-L16"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-003",
@@ -45,9 +47,10 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 5,
         "line_end": 16,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/src/cryptography/__about__.py#L5-L16"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-004",
@@ -61,9 +64,10 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 5,
         "line_end": 15,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/src/cryptography/hazmat/primitives/constant_time.py#L5-L15"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-005",
@@ -77,9 +81,10 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 5,
         "line_end": 16,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/strings/strings_test.go#L5-L16"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-006",
@@ -93,9 +98,10 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 12,
         "line_end": 23,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/path/path.go#L12-L23"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-007",
@@ -109,9 +115,10 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 12,
         "line_end": 23,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/net/url/url.go#L12-L23"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-008",
@@ -125,9 +132,10 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 5,
         "line_end": 16,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/fmt/print.go#L5-L16"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-009",
@@ -141,9 +149,10 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 22,
         "line_end": 33,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/lib/path.js#L22-L33"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-010",
@@ -157,9 +166,10 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 24,
         "line_end": 35,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/lib/querystring.js#L24-L35"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-011",
@@ -173,9 +183,10 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 22,
         "line_end": 33,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/lib/util.js#L22-L33"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-012",
@@ -189,9 +200,10 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 22,
         "line_end": 33,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/lib/string_decoder.js#L22-L33"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-013",
@@ -205,9 +217,10 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 1,
         "line_end": 12,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/core/src/main/java/org/bouncycastle/util/Strings.java#L1-L12"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-014",
@@ -221,9 +234,10 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 1,
         "line_end": 12,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/core/src/main/java/org/bouncycastle/util/Arrays.java#L1-L12"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-015",
@@ -237,9 +251,10 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 1,
         "line_end": 12,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/core/src/main/java/org/bouncycastle/util/Integers.java#L1-L12"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-016",
@@ -253,9 +268,10 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 1,
         "line_end": 12,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/core/src/main/java/org/bouncycastle/util/Pack.java#L1-L12"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-017",
@@ -269,9 +285,10 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 19,
         "line_end": 30,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/apps/version.c#L19-L30"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     },
     {
       "id": "rw-neg-018",
@@ -285,9 +302,10 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 23,
         "line_end": 34,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/crypto/mem.c#L23-L34"
       },
-      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+      "review": "Selected upstream excerpt contains no target algorithm-specific crypto API indicator; this does not assert that the wider repository is crypto-free."
     }
   ]
 }
