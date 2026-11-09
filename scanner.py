@@ -248,6 +248,12 @@ def scan_file(filepath, relative_path=None):
         line = _strip_line_comment(raw_line, ext)
         if not line.strip():
             continue
+        # If a recognized API is present, its arguments are API context, not
+        # independent free-text algorithm mentions (e.g. createSign("RSA-SHA256")).
+        has_api_context = any(re.search(pattern, line, re.I)
+                              for pattern, *_ in LANGUAGE_PATTERNS.get(ext, []))
+        if has_api_context:
+            continue
         for pattern, algorithm, purpose, vulnerable in TEXT_PATTERNS:
             if pattern.search(line):
                 findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose,
