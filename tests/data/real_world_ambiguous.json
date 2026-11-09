@@ -13,7 +13,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 270,
         "line_end": 270,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L270-L270"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -29,7 +30,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 271,
         "line_end": 271,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L271-L271"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -45,7 +47,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 58,
         "line_end": 58,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/tls/auth.go#L58-L58"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -61,7 +64,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 113,
         "line_end": 113,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-sign-verify.js#L113-L113"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -77,7 +81,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 121,
         "line_end": 121,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-sign-verify.js#L121-L121"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -93,7 +98,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 1001,
         "line_end": 1001,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L1001-L1001"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -109,7 +115,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 154,
         "line_end": 154,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L154-L154"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -125,7 +132,8 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 63,
         "line_end": 63,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/demos/signature/rsa_pss_hash.c#L63-L63"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -141,7 +149,8 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 142,
         "line_end": 142,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/demos/signature/rsa_pss_hash.c#L142-L142"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     },
@@ -157,7 +166,8 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 44,
         "line_end": 44,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/demos/signature/rsa_pss_hash.c#L44-L44"
       },
       "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
     }
