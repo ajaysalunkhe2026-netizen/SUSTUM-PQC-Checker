@@ -84,7 +84,7 @@ python tests/evaluate_detection.py
 python tests/evaluate_real_world.py
 ~~~
 
-The first evaluator uses a hand-authored smoke corpus. The second uses a small source-backed pilot with immutable upstream provenance. Both are regression signals only, not representative accuracy estimates. The source-backed pilot is not independently reviewed; expand it to 50–100 cases and obtain a second reviewer before using any metrics externally.
+The first evaluator uses a hand-authored smoke corpus. The second evaluates 61 curated source-backed cases across five upstream repositories (29 positive, 22 negative, 10 ambiguous) with immutable commit and line provenance. Latest pilot result: TP=27, FP=0, FN=2, TN=22 (precision 1.00, recall 0.931, F1 0.964). These are curated excerpt-level regression metrics, not representative production accuracy. Labels have not received independent second-reviewer sign-off. See [P1.1 benchmark report](P1_1_REAL_WORLD_BENCHMARK.md) for methodology, missed cases and limitations.
 
 ## Project status
 
@@ -92,7 +92,7 @@ The current branch is a development branch. Passing local tests will demonstrate
 
 ## Next engineering milestones
 
-1. Grow and independently review the labelled detection corpus; add real-project fixtures with permission and documented ground truth.
+1. Obtain independent second-reviewer sign-off for the 61 source-backed cases and expand toward 100+ cases, including non-test application code.
 2. Add parser-backed analysis, interprocedural alias/wrapper resolution and bounded data-flow analysis.
 3. Extend dependency graph resolution, lockfile and transitive dependency intelligence.
 4. Verify CBOM component completeness and interoperability against independently produced real-project inventories and CycloneDX tooling.
