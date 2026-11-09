@@ -25,3 +25,5 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Evaluate labelled detection regression corpus
         run: python tests/evaluate_detection.py
+      - name: Evaluate source-backed real-world pilot corpus
+        run: python tests/evaluate_real_world.py
