@@ -23,3 +23,5 @@ jobs:
           pip install -r requirements.txt
       - name: Run unit and API tests
         run: python -m unittest discover -s tests -v
+      - name: Evaluate labelled detection regression corpus
+        run: python tests/evaluate_detection.py
