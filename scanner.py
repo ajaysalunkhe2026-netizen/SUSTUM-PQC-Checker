@@ -348,6 +348,8 @@ def scan_file(filepath, relative_path=None):
         line = _strip_line_comment(raw_line, ext)
         if not line.strip():
             continue
+        if ext == ".py" and re.match(r"^\\s*(?:from\\s+\\S+\\s+import\\b|import\\b)", line):
+            continue
         # If a recognized API is present, its arguments are API context, not
         # independent free-text algorithm mentions (e.g. createSign("RSA-SHA256")).
         has_api_context = any(re.search(pattern, line, re.I)
