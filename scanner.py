@@ -208,13 +208,14 @@ class CryptoASTVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         name = self._resolve_alias(_dotted_name(node.func))
         low = name.lower()
-        if isinstance(node.func, ast.Name) and node.func.id in self.crypto_wrappers:
-            wrapped = self.crypto_wrappers[node.func.id]
+        if isinstance(node.func, ast.Name) and name in self.crypto_wrappers:
+            wrapped = self.crypto_wrappers[name]
             self.findings.append(_finding(
                 f"{self.filename}:{node.lineno}", wrapped["algorithm"],
                 "Wrapper invocation: " + wrapped["purpose"],
                 "Interprocedural wrapper call",
-                f"{node.func.id}() wraps {wrapped['evidence']}", wrapped.get("vulnerable")))
+                f"{node.func.id}() resolves to {name}() wrapping {wrapped['evidence']}",
+                wrapped.get("vulnerable")))
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
             object_name = node.func.value.id
             operation = node.func.attr.lower()
