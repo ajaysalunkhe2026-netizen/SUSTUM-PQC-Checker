@@ -42,7 +42,7 @@ CASES = [
     {"id": "contextual-sign", "label": "ambiguous", "file": "sign.js",
      "source": "const signer = createSign('RSA-SHA256');\n",
      "expected": None},
-    {"id": "string-mention", "label": "ambiguous", "file": "logging.py",
+    {"id": "string-mention", "label": "negative", "file": "logging.py",
      "source": "message = 'RSA is mentioned in this diagnostic string'\n",
      "expected": None},
 ]
