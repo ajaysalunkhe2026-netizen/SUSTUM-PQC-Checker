@@ -1,0 +1,293 @@
+{
+  "description": "Source-backed negative controls from non-cryptographic utility modules. Cases are file excerpts, not claims that the parent repositories contain no cryptography.",
+  "cases": [
+    {
+      "id": "rw-neg-001",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".py",
+      "source": "from __future__ import annotations\n\nimport enum\nimport sys\nimport types\nimport typing\nimport warnings\nfrom collections.abc import Sequence\n\n\n# We use a UserWarning subclass, instead of DeprecationWarning, because CPython\n# decided deprecation warnings should be invisible by default.",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "src/cryptography/utils.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 5,
+        "line_end": 16,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-002",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".py",
+      "source": "from __future__ import annotations\n\nimport typing\n\nfrom cryptography.hazmat.bindings._rust import exceptions as rust_exceptions\n\nif typing.TYPE_CHECKING:\n    from cryptography.hazmat.bindings._rust import openssl as rust_openssl\n\n_Reasons = rust_exceptions._Reasons\n\n",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "src/cryptography/exceptions.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 5,
+        "line_end": 16,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-003",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".py",
+      "source": "from __future__ import annotations\n\n__all__ = [\n    \"__author__\",\n    \"__copyright__\",\n    \"__version__\",\n]\n\n__version__ = \"51.0.0-dev1\"\n\n\n__author__ = \"The Python Cryptographic Authority and individual contributors\"",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "src/cryptography/__about__.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 5,
+        "line_end": 16,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-004",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".py",
+      "source": "from __future__ import annotations\n\nimport hmac\n\n\ndef bytes_eq(a: bytes, b: bytes) -> bool:\n    if not isinstance(a, bytes) or not isinstance(b, bytes):\n        raise TypeError(\"a and b must be bytes.\")\n\n    return hmac.compare_digest(a, b)\n",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "src/cryptography/hazmat/primitives/constant_time.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 5,
+        "line_end": 15,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-005",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".go",
+      "source": "package strings_test\n\nimport (\n\t\"bytes\"\n\t\"fmt\"\n\t\"internal/asan\"\n\t\"io\"\n\t\"iter\"\n\t\"math\"\n\t\"math/rand\"\n\t\"slices\"\n\t\"strconv\"",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/strings/strings_test.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 5,
+        "line_end": 16,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-006",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".go",
+      "source": "package path\n\nimport \"internal/bytealg\"\n\n// A lazybuf is a lazily constructed path buffer.\n// It supports append, reading previously appended bytes,\n// and retrieving the final string. It does not allocate a buffer\n// to hold the output until that output diverges from s.\ntype lazybuf struct {\n\ts   string\n\tbuf []byte\n\tw   int",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/path/path.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 12,
+        "line_end": 23,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-007",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".go",
+      "source": "package url\n\n// When sending changes, first  search old issues for history on decisions.\n// Unit tests should also contain references to issue numbers with details.\n\nimport (\n\t\"bytes\"\n\t\"errors\"\n\t\"fmt\"\n\t\"internal/godebug\"\n\t\"net/netip\"\n\t\"path\"",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/net/url/url.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 12,
+        "line_end": 23,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-008",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".go",
+      "source": "package fmt\n\nimport (\n\t\"internal/fmtsort\"\n\t\"io\"\n\t\"os\"\n\t\"reflect\"\n\t\"strconv\"\n\t\"sync\"\n\t\"unicode/utf8\"\n)\n",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/fmt/print.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 5,
+        "line_end": 16,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-009",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".js",
+      "source": "'use strict';\n\nconst {\n  ArrayPrototypeIncludes,\n  ArrayPrototypeJoin,\n  ArrayPrototypePush,\n  ArrayPrototypeSlice,\n  FunctionPrototypeBind,\n  StringPrototypeCharCodeAt,\n  StringPrototypeIncludes,\n  StringPrototypeIndexOf,\n  StringPrototypeLastIndexOf,",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "lib/path.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 22,
+        "line_end": 33,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-010",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".js",
+      "source": "'use strict';\n\nconst {\n  Array,\n  ArrayIsArray,\n  Int8Array,\n  MathAbs,\n  NumberIsFinite,\n  ObjectKeys,\n  String,\n  StringPrototypeCharCodeAt,\n  StringPrototypeIndexOf,",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "lib/querystring.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 24,
+        "line_end": 35,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-011",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".js",
+      "source": "'use strict';\n\nconst {\n  ArrayIsArray,\n  ArrayPrototypePop,\n  ArrayPrototypePush,\n  Error,\n  ErrorCaptureStackTrace,\n  FunctionPrototypeBind,\n  NumberIsSafeInteger,\n  ObjectDefineProperties,\n  ObjectDefineProperty,",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "lib/util.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 22,
+        "line_end": 33,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-012",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".js",
+      "source": "'use strict';\n\nconst {\n  ArrayBufferIsView,\n  ObjectDefineProperties,\n  Symbol,\n  TypedArrayPrototypeSubarray,\n} = primordials;\n\nconst { Buffer } = require('buffer');\nconst {\n  kIncompleteCharactersStart,",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "lib/string_decoder.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 22,
+        "line_end": 33,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-013",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".java",
+      "source": "package org.bouncycastle.util;\n\nimport java.io.ByteArrayOutputStream;\nimport java.io.IOException;\nimport java.io.OutputStream;\nimport java.security.AccessController;\nimport java.security.PrivilegedAction;\nimport java.util.ArrayList;\nimport java.util.Vector;\n\nimport org.bouncycastle.util.encoders.UTF8;\n/**",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "core/src/main/java/org/bouncycastle/util/Strings.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 1,
+        "line_end": 12,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-014",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".java",
+      "source": "package org.bouncycastle.util;\n\nimport java.math.BigInteger;\nimport java.util.Comparator;\nimport java.util.NoSuchElementException;\n\n/**\n * General array utilities.\n */\npublic final class Arrays\n{\n    private Arrays()",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "core/src/main/java/org/bouncycastle/util/Arrays.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 1,
+        "line_end": 12,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-015",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".java",
+      "source": "package org.bouncycastle.util;\n\n/**\n * Utility methods and constants for ints.\n */\npublic class Integers\n{\n    public static final int BYTES = 4;\n    public static final int SIZE = Integer.SIZE;\n\n    public static int bitCount(int i)\n    {",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "core/src/main/java/org/bouncycastle/util/Integers.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 1,
+        "line_end": 12,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-016",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".java",
+      "source": "package org.bouncycastle.util;\n\n/**\n * Utility methods for converting byte arrays into ints and longs, and back again.\n * <p>\n * A copy of this class in src/main/jdk23 (META-INF/versions/23) differs only in longToLittleEndian(long, byte[], int);\n * keep the two in step.\n */\npublic abstract class Pack\n{\n    public static short bigEndianToShort(byte[] bs, int off)\n    {",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "core/src/main/java/org/bouncycastle/util/Pack.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 1,
+        "line_end": 12,
+        "license": "MIT"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-017",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".c",
+      "source": "typedef enum OPTION_choice {\n    OPT_COMMON,\n    OPT_B,\n    OPT_D,\n    OPT_M,\n    OPT_F,\n    OPT_O,\n    OPT_P,\n    OPT_V,\n    OPT_A,\n    OPT_R,\n    OPT_C",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "apps/version.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 19,
+        "line_end": 30,
+        "license": "Apache-2.0"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    },
+    {
+      "id": "rw-neg-018",
+      "label": "negative",
+      "expected": "no_crypto_finding",
+      "extension": ".c",
+      "source": "static int allow_customize = 1;\nstatic CRYPTO_malloc_fn malloc_impl = CRYPTO_malloc;\nstatic CRYPTO_realloc_fn realloc_impl = CRYPTO_realloc;\nstatic CRYPTO_free_fn free_impl = CRYPTO_free;\n\n#if !defined(OPENSSL_NO_CRYPTO_MDEBUG) && !defined(FIPS_MODULE)\n#include \"internal/tsan_assist.h\"\n\n#ifdef TSAN_REQUIRES_LOCKING\n#define INCREMENT(x) /* empty */\n#define LOAD(x) 0\n#else /* TSAN_REQUIRES_LOCKING */",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "crypto/mem.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 23,
+        "line_end": 34,
+        "license": "Apache-2.0"
+      },
+      "review": "Reviewed source excerpt from a non-cryptographic utility/module; no cryptographic API or algorithm use in selected lines."
+    }
+  ]
+}
