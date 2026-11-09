@@ -229,7 +229,10 @@ class CryptoASTVisitor(ast.NodeVisitor):
             if any(token in low for token in ("mlkem", "mldsa", "slhdsa", "kyber", "dilithium")):
                 self.findings.append(_finding(f"{self.filename}:{node.lineno}", "PQC API reference",
                     "PQC operation", "High-confidence API reference", name, False))
-            elif name.split(".")[-1].lower() in {"sign", "verify", "exchange"} and self.aliases:
+            elif (name.split(".")[-1].lower() in {"sign", "verify", "exchange"} and self.aliases
+                  and not (isinstance(node.func, ast.Attribute)
+                           and isinstance(node.func.value, ast.Name)
+                           and node.func.value.id in self.crypto_objects)):
                 operation = name.split(".")[-1].lower()
                 self.findings.append(_finding(f"{self.filename}:{node.lineno}", "Cryptographic operation",
                     PY_CALLS[operation], "Contextual API call", name, None))
