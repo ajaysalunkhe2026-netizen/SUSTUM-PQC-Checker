@@ -4,7 +4,7 @@ SUSTUM is an early-stage static-analysis prototype for identifying cryptography-
 
 ## Current scope
 
-- Python AST indicators for selected asymmetric key-generation and cryptographic operation calls, including imported aliases, simple assigned function aliases, calls located inside wrapper function bodies, limited same-file wrapper callsite linkage, and bounded same-scope key-object alias tracking into selected operations.
+- Python AST indicators for selected asymmetric key-generation and cryptographic operation calls, including imported aliases, simple assigned function aliases, calls located inside wrapper function bodies, limited same-file wrapper callsite linkage (including a simple assigned alias to a discovered wrapper), and bounded same-scope key-object alias tracking into selected operations.
 - Heuristic API-pattern discovery for selected Java, JavaScript/TypeScript, Go and C/C++ crypto APIs (including common JCA, WebCrypto/Node crypto, Go standard library and OpenSSL calls).
 - Dependency inventory from requirements.txt, package.json and go.mod.
 - NIST- or CNSA-oriented advisory mapping for a small set of detected indicators.
@@ -20,7 +20,7 @@ This is **not an enterprise-ready or production security product**. It is a stat
 
 - It does not perform runtime, binary, network, TLS endpoint, certificate-store, HSM, cloud, or remote-service discovery.
 - A text match or dependency manifest entry does not prove that cryptography is used at runtime.
-- Language support is heuristic and API-pattern based, not a complete compiler-grade parser. Python imported aliases, simple assigned function aliases, wrapper-body and same-file wrapper-callsite discovery, and bounded same-scope key-object-to-operation tracking are covered by focused tests; general interprocedural wrapper mapping, cross-file call graphs, branch-sensitive data-flow, reflection, generated code, macros, custom providers, complex indirect calls and unsupported APIs may still be missed.
+- Language support is heuristic and API-pattern based, not a complete compiler-grade parser. C-like and selected configuration comment masking handles quoted comment markers and multi-line block comments, but it is not a full language lexer and does not model every language-specific string, preprocessor, or template construct. Python imported aliases, simple assigned function aliases, wrapper-body and same-file wrapper-callsite discovery, and bounded same-scope key-object-to-operation tracking are covered by focused tests; general interprocedural wrapper mapping, cross-file call graphs, branch-sensitive data-flow, reflection, generated code, macros, custom providers, complex indirect calls and unsupported APIs may still be missed.
 - Detection coverage is limited; absence of findings does not prove absence of cryptographic assets.
 - Recommendations are advisory and require protocol, implementation, interoperability, vendor and policy review.
 - Schema validation establishes structural conformance to the selected CycloneDX 1.6 JSON schema only; it does not certify the accuracy or completeness of crypto discovery or regulatory compliance.
