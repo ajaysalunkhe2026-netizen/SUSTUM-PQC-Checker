@@ -35,6 +35,18 @@ def _record(name, version, path, ecosystem, source_kind, scope="unknown",
     }
 
 
+def _diagnostic(path, message):
+    """Return a visible scanner diagnostic instead of silently losing a manifest."""
+    return {
+        "location": path, "asset_type": "Scanner diagnostic",
+        "algorithm": "Dependency manifest parse error", "key_size": "Unknown",
+        "purpose": "Dependency inventory incomplete", "protocol": "-",
+        "library": "-", "version": "unknown", "vulnerable": None,
+        "confidence": "Parser diagnostic", "evidence": str(message)[:500],
+        "notes": "Some dependency inventory data may be missing; review manifest syntax and format.",
+    }
+
+
 def _pep508_name(spec):
     # Extract only the normalized project name; retain the original constraint
     # as the version field rather than pretending it is a resolved version.
@@ -46,8 +58,10 @@ def parse_pyproject(path, rel_path):
     try:
         with open(path, "rb") as handle:
             data = tomllib.load(handle)
-    except (OSError, ValueError, TypeError):
-        return []
+    except (OSError, ValueError, TypeError) as exc:
+        return [_diagnostic(rel_path, f"Unable to parse TOML: {exc}")]
+    if not isinstance(data, dict):
+        return [_diagnostic(rel_path, "TOML root must be a table.")]
     rows = []
     project = data.get("project") or {}
     for spec in project.get("dependencies", []) or []:
@@ -111,12 +125,12 @@ def _npm_rows(entries, rel_path, source_kind, relationship):
     for name, item in entries.items():
         if not isinstance(item, dict):
             continue
-        version = item.get("version") or item.get("resolved") or "unspecified"
+        version = item.get("version") or "unspecified"
         dev = bool(item.get("dev", False))
         optional = bool(item.get("optional", False))
         scope = "development" if dev else ("optional" if optional else "runtime")
         rows.append(_record(name, str(version), rel_path, "npm", source_kind, scope,
-                            relationship, "locked" if item.get("version") else "resolved-url-or-unspecified"))
+                            relationship, "locked" if item.get("version") else "unknown"))
     return rows
 
 
@@ -141,7 +155,7 @@ def parse_npm_lock(path, rel_path):
             marker = "node_modules/"
             if marker in package_path:
                 name = package_path.rsplit(marker, 1)[-1]
-                relationship = "direct" if name in direct_names else "transitive"
+                relationship = "direct" if package_path == "node_modules/" + name and name in direct_names else "transitive"
                 rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json packages", relationship))
         return rows
     # npm lockfile v1 stores a nested dependencies tree.
