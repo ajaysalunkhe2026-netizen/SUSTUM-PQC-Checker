@@ -1,6 +1,6 @@
 # Industry-grade CBOM engineering plan
 
-**Status:** Architecture audit recorded; Phase 1 dependency-inventory foundation implemented and under continued expansion.
+**Status:** Architecture audit recorded; Phase 1 dependency-inventory foundation implemented, with parser diagnostics and npm lockfile edge-case fixes added in the focused engineering sprint.
 **Working branch:** `feature/reliable-pqc-cbom`
 **Baseline commit audited:** `6324c214b5b764afb3d5c3b251a8017f1195a3a8`
 **Main branch:** intentionally unchanged.
@@ -43,7 +43,7 @@ Observed gaps to address:
 - Distinguish direct/transitive and runtime/development/optional scopes where the source format supports it.
 - Record manifest path, line/provenance where available, package ecosystem, package identifier, and parser diagnostics.
 - Do not infer cryptographic usage merely from a package name.
-- Treat unsupported, malformed, or ambiguous manifests as explicit diagnostics rather than silently dropping them.
+- Treat unsupported, malformed, or ambiguous manifests as explicit diagnostics rather than silently dropping them. Initial TOML/JSON parse failures now emit scanner diagnostics; format coverage and diagnostic quality still need broader fixtures.
 
 **Exit gate:** fixtures for supported manifest versions, parser error tests, deterministic inventory, and documented limits on dependency graph completeness.
 
@@ -101,6 +101,17 @@ Planning estimate from the current baseline:
 
 Overall implementation estimate: **9–13 weeks**, subject to audit findings, scope, test results, and available review capacity. Independent validation is expected to require a further **2–4 weeks**. These are estimates, not committed delivery dates.
 
-## 5. Immediate next implementation task
+## 5. Focused engineering sprint — 9 November 2026
+
+Completed on `feature/reliable-pqc-cbom`:
+- Malformed Python TOML and JSON lockfile inputs now produce visible scanner diagnostics rather than silently returning an empty inventory (initial coverage; not every parser path has exhaustive diagnostics yet).
+- npm lockfile `resolved` tarball URLs are no longer mislabeled as package versions when no semantic `version` is present.
+- npm v2/v3 direct-versus-transitive classification now checks the root `node_modules/<name>` package path, avoiding marking a nested duplicate as direct merely because the same package name is a root dependency.
+- Added regression tests for malformed manifest diagnostics, invalid npm lock root, missing npm version with resolved URL, and nested duplicate package relationship.
+- CI passed for commit `3d822f59526700b0ec0cb9c5add0e33bbe8a08dc`: [GitHub Actions run 42557599143](https://github.com/ajaysalunkhe2026-netizen/SUSTUM-PQC-Checker/actions/runs/42557599143).
+
+Remaining in this area: preserve npm package-instance identity through CBOM serialization, add package-manager/version-specific fixtures, cover more malformed shapes, and validate dependency relationships against real lockfiles. The sprint does not establish complete dependency resolution or production readiness.
+
+## 6. Immediate next implementation task
 
 Begin Phase 0 by freezing the current benchmark baseline and defining an independent label-review protocol. In parallel, start Phase 1 with dependency parser fixtures and a normalized dependency record that preserves declared-versus-resolved version and provenance. Keep changes on `feature/reliable-pqc-cbom`; leave `main` untouched.
