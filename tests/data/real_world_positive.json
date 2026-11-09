@@ -1,0 +1,389 @@
+{
+  "description": "Source-backed positive API-use cases. Short excerpts are retained with immutable upstream commit/path/line provenance; Python imports are included as context and callsite indentation is normalized.",
+  "cases": [
+    {
+      "id": "rw-pos-001",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".py",
+      "source": "from cryptography.hazmat.primitives.asymmetric import padding, rsa\nskey = rsa.generate_private_key(public_exponent, key_size, backend)",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 184,
+        "line_end": 184,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-002",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".py",
+      "source": "from cryptography.hazmat.primitives.asymmetric import padding, rsa\nrsa.generate_private_key(public_exponent=1, key_size=2048)",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 193,
+        "line_end": 193,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-003",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".py",
+      "source": "from cryptography.hazmat.primitives.asymmetric import padding, rsa\nrsa.generate_private_key(public_exponent=4, key_size=2048)",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 196,
+        "line_end": 196,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-004",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".py",
+      "source": "from cryptography.hazmat.primitives.asymmetric import padding, rsa\nrsa.generate_private_key(public_exponent=65535, key_size=2048)",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 199,
+        "line_end": 199,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-005",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".py",
+      "source": "from cryptography.hazmat.primitives.asymmetric import padding, rsa\nrsa.generate_private_key(public_exponent=65537, key_size=511)",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 203,
+        "line_end": 203,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-006",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, signed, sig); err != nil {",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/tls/auth.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 62,
+        "line_end": 62,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-007",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "if err := rsa.VerifyPSS(pubKey, hashFunc, signed, sig, signOpts); err != nil {",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/tls/auth.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 71,
+        "line_end": 71,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-008",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "if err := rsa.VerifyPKCS1v15(pubKey, hashFunc, hashed, sig); err != nil {",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/tls/auth.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 97,
+        "line_end": 97,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-009",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "return rsa.VerifyPSS(pub, hashType, signed, signature, &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/x509/x509.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 1115,
+        "line_end": 1115,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-010",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "return rsa.VerifyPKCS1v15(pub, hashType, signed, signature)",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/x509/x509.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 1117,
+        "line_end": 1117,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-011",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "k, err := rsa.GenerateKey(rand.Reader, 2048)",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/x509/x509_test.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 3279,
+        "line_end": 3279,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-012",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".go",
+      "source": "return rsa.SignPKCS1v15(rand, rsaPrivateKey, opts.HashFunc(), tbs)",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/x509/x509_test.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 4521,
+        "line_end": 4521,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-013",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".js",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 111,
+        "line_end": 111,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-014",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".js",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 128,
+        "line_end": 128,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-015",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".js",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 148,
+        "line_end": 148,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-016",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".js",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 168,
+        "line_end": 168,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-017",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".js",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 185,
+        "line_end": 185,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-018",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".java",
+      "source": "Cipher c = Cipher.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 202,
+        "line_end": 202,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-019",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".java",
+      "source": "c = Cipher.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 225,
+        "line_end": 225,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-020",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".java",
+      "source": "c = Cipher.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 275,
+        "line_end": 275,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-021",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".java",
+      "source": "KeyPairGenerator.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 613,
+        "line_end": 613,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-022",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".java",
+      "source": "KeyPairGenerator keygen = KeyPairGenerator.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 888,
+        "line_end": 888,
+        "license": "MIT"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-023",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".c",
+      "source": "&& TEST_ptr((md = EVP_sha256()))",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "test/rsa_test.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 539,
+        "line_end": 539,
+        "license": "Apache-2.0"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    },
+    {
+      "id": "rw-pos-024",
+      "label": "positive",
+      "expected": "api",
+      "extension": ".c",
+      "source": "&& TEST_true(EVP_DigestSignInit(ctx, NULL, md, NULL, pkey))",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "test/rsa_test.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 545,
+        "line_end": 545,
+        "license": "Apache-2.0"
+      },
+      "review": "Source-backed API callsite; expected API-use indicator."
+    }
+  ]
+}
