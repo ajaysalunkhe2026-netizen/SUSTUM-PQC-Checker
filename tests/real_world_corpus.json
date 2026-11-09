@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "title": "SUSTUM source-backed real-world detection pilot",
+  "status": "pilot_not_independently_validated",
+  "methodology": "Small source-backed pilot corpus. Excerpts are pinned to upstream commits and manually reviewed for their expected crypto or non-crypto context. These labels have not yet received independent external reviewer sign-off. Positive cases include expected callsite line and purpose so algorithm-only matches do not hide weak contextual detection.",
+  "cases": [
+    {
+      "id": "pyca-rsa-keygen",
+      "label": "positive",
+      "extension": ".py",
+      "source": "def test_generate_rsa_keys(self, backend, public_exponent, key_size):\n    if backend._fips_enabled:\n        if key_size < backend._fips_rsa_min_key_size:\n            pytest.skip(f\"Key size not FIPS compliant: {key_size}\")\n        if public_exponent < backend._fips_rsa_min_public_exponent:\n            pytest.skip(f\"Exponent not FIPS compliant: {public_exponent}\")\n    skey = rsa.generate_private_key(public_exponent, key_size, backend)\n    assert skey.key_size == key_size\n",
+      "expected_algorithm": "RSA",
+      "expected_callsite_line": 7,
+      "expected_purpose": "Key generation",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "original_lines": "184-191",
+        "license": "Apache-2.0 AND BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L184-L191"
+      },
+      "ground_truth_basis": "Named RSA test and explicit rsa.generate_private_key call; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "nodejs-rsa-keygen",
+      "label": "positive",
+      "extension": ".js",
+      "source": "// Missing / invalid publicKeyEncoding.format.\n  for (const format of [undefined, null, 0, false, 'a', {}]) {\n    assert.throws(() => generateKeyPairSync('rsa', {\n      modulusLength: 4096,\n      publicKeyEncoding: {\n        type: 'pkcs1',\n        format\n",
+      "expected_algorithm": "RSA",
+      "expected_callsite_line": 3,
+      "expected_purpose": "Key generation",
+      "provenance": {
+        "repository": "nodejs/node",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "path": "test/parallel/test-crypto-keygen.js",
+        "original_lines": "146-153",
+        "license": "MIT (Node.js project license)",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L146-L153"
+      },
+      "ground_truth_basis": "Node.js crypto test imports generateKeyPairSync from crypto and invokes it with RSA key type; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "go-rsa-dot-import-keygen",
+      "label": "positive",
+      "extension": ".go",
+      "source": "import . \"crypto/rsa\"\nimport \"crypto/rand\"\n\n_, err := GenerateKey(rand.Reader, 2048)\n",
+      "expected_algorithm": "RSA",
+      "expected_callsite_line": 4,
+      "expected_purpose": "Key generation",
+      "provenance": {
+        "repository": "golang/go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "path": "src/crypto/rsa/rsa_test.go",
+        "original_lines": "14-16 and 43-49",
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/rsa/rsa_test.go#L14-L16"
+      },
+      "ground_truth_basis": "Go standard-library RSA test uses dot-imported crypto/rsa GenerateKey; source excerpt joins the import and call lines for a focused scanner fixture.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "bouncycastle-java-rsa-keygen",
+      "label": "positive",
+      "extension": ".java",
+      "source": "KeyPairGenerator keyPairGen =\n        KeyPairGenerator.getInstance(\"RSA\", \"BC\");\n",
+      "expected_algorithm": "RSA",
+      "expected_callsite_line": 2,
+      "expected_purpose": "Key generation",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "original_lines": "612-614",
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L612-L614"
+      },
+      "ground_truth_basis": "Bouncy Castle RSA provider test obtains an RSA KeyPairGenerator; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "openssl-provider-rsa-keygen",
+      "label": "positive",
+      "extension": ".c",
+      "source": "static EVP_PKEY *generate_rsa_key_long(OSSL_LIB_CTX *libctx, unsigned int bits)\n{\n    EVP_PKEY_CTX *genctx = NULL;\n    EVP_PKEY *pkey = NULL;\n    unsigned int primes = 2;\n\n    /* Create context using RSA algorithm. \"RSA-PSS\" could also be used here. */\n    genctx = EVP_PKEY_CTX_new_from_name(libctx, \"RSA\", propq);\n    if (genctx == NULL) {\n        fprintf(stderr, \"EVP_PKEY_CTX_new_from_name() failed\\n\");\n        goto cleanup;\n    }\n\n    /* Initialize context for key generation purposes. */\n    if (EVP_PKEY_keygen_init(genctx) <= 0) {\n        fprintf(stderr, \"EVP_PKEY_keygen_init() failed\\n\");\n",
+      "expected_algorithm": "RSA",
+      "expected_callsite_line": 8,
+      "expected_purpose": "Key generation",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "path": "demos/pkey/EVP_PKEY_RSA_keygen.c",
+        "original_lines": "37-52",
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/demos/pkey/EVP_PKEY_RSA_keygen.c#L37-L52"
+      },
+      "ground_truth_basis": "OpenSSL demo function is explicitly named generate_rsa_key_long and initializes an RSA key-generation context; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "go-strings-utility-negative",
+      "label": "negative",
+      "extension": ".go",
+      "source": "func collect(t *testing.T, seq iter.Seq[string]) []string {\n    out := slices.Collect(seq)\n    out1 := slices.Collect(seq)\n    if !slices.Equal(out, out1) {\n        t.Fatalf(\"inconsistent seq:\\n%s\\n%s\", out, out1)\n    }\n    return out\n",
+      "expected_algorithm": null,
+      "provenance": {
+        "repository": "golang/go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "path": "src/strings/strings_test.go",
+        "original_lines": "24-30",
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/strings/strings_test.go#L24-L30"
+      },
+      "ground_truth_basis": "String utility test excerpt contains no cryptographic API or algorithm use; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "node-path-utility-negative",
+      "label": "negative",
+      "extension": ".js",
+      "source": "'use strict';\n\nconst {\n  ArrayPrototypeIncludes,\n  ArrayPrototypeJoin,\n  ArrayPrototypePush,\n  ArrayPrototypeSlice,\n  FunctionPrototypeBind,\n  StringPrototypeCharCodeAt,\n  StringPrototypeIncludes,\n  StringPrototypeIndexOf,\n  StringPrototypeLastIndexOf,\n  StringPrototypeRepeat,\n",
+      "expected_algorithm": null,
+      "provenance": {
+        "repository": "nodejs/node",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "path": "lib/path.js",
+        "original_lines": "22-34",
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/lib/path.js#L22-L34"
+      },
+      "ground_truth_basis": "Node.js path utility excerpt contains ordinary path/string helpers and no crypto API; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "bouncycastle-strings-utility-negative",
+      "label": "negative",
+      "extension": ".java",
+      "source": "/**\n * String utilities.\n */\npublic final class Strings\n{\n    private static String LINE_SEPARATOR;\n\n    static\n    {\n        try\n        {\n            LINE_SEPARATOR = AccessController.doPrivileged(new PrivilegedAction<String>()\n            {\n                public String run()\n                {\n                    // the easy way\n                    return System.getProperty(\"line.separator\");\n",
+      "expected_algorithm": null,
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "path": "core/src/main/java/org/bouncycastle/util/Strings.java",
+        "original_lines": "12-29",
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/core/src/main/java/org/bouncycastle/util/Strings.java#L12-L29"
+      },
+      "ground_truth_basis": "Bouncy Castle string utility excerpt uses Java security access-control utilities but no cryptographic algorithm or crypto operation; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    },
+    {
+      "id": "cryptography-utils-negative",
+      "label": "negative",
+      "extension": ".py",
+      "source": "from __future__ import annotations\n\nimport enum\nimport sys\nimport types\nimport typing\nimport warnings\nfrom collections.abc import Sequence\n\n",
+      "expected_algorithm": null,
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "path": "src/cryptography/utils.py",
+        "original_lines": "5-14",
+        "license": "Apache-2.0 AND BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/src/cryptography/utils.py#L5-L14"
+      },
+      "ground_truth_basis": "General utility module import excerpt has no crypto operation or algorithm use; source excerpt manually reviewed.",
+      "review_status": "provisional_source_review"
+    }
+  ]
+}
