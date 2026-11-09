@@ -12,6 +12,7 @@ SUSTUM is an early-stage static-analysis prototype for identifying cryptography-
 - HTML report returned in the API response.
 - JSON inventory export using CycloneDX 1.6 structure and SUSTUM evidence properties.
 - Strict CycloneDX 1.6 JSON validation through the CycloneDX project's Python validator; validation status and errors are returned with each scan.
+- A small, labelled detection regression smoke corpus with case-level TP/FP/FN/TN, precision, recall and F1 output in CI. Ambiguous cases are reported separately and excluded from binary metrics.
 
 ## Important limitations
 
@@ -74,11 +75,14 @@ The JSON response includes report_html and sbom. Save report_html as an .html fi
 
 Supported guideline values: nist and cnsa.
 
-## Run tests
+## Run tests and detection regression evaluation
 
 ~~~bash
 python -m unittest discover -s tests -v
+python tests/evaluate_detection.py
 ~~~
+
+The evaluator uses a hand-authored smoke corpus. Its metrics are regression signals only, not representative accuracy estimates. Expand and independently review the corpus before using any metric externally.
 
 ## Project status
 
@@ -86,8 +90,9 @@ The current branch is a development branch. Passing local tests will demonstrate
 
 ## Next engineering milestones
 
-1. Expand language/API coverage with parser-backed analysis and alias/data-flow support.
-2. Add larger reproducible positive, negative, and ambiguous detection fixtures; measure precision/recall on a documented corpus.
-3. Extend dependency-manifest and build-system coverage and add API contract/security tests.
-5. Add authentication, authorization, audit logging, quotas, storage isolation and deployment hardening before any shared or hosted deployment.
-6. Measure precision/recall on a documented corpus before publishing accuracy claims.
+1. Grow and independently review the labelled detection corpus; add real-project fixtures with permission and documented ground truth.
+2. Add parser-backed analysis, interprocedural alias/wrapper resolution and bounded data-flow analysis.
+3. Extend dependency graph resolution, lockfile and transitive dependency intelligence.
+4. Verify CBOM component completeness and interoperability against independently produced real-project inventories and CycloneDX tooling.
+5. Build purpose-aware migration plans with explicit protocol, key-use and operational dependencies.
+6. Add authentication, authorization/RBAC, audit logging, tenant isolation, quotas, storage isolation and deployment hardening before shared or hosted deployment.
