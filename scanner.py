@@ -201,13 +201,13 @@ def _strip_line_comment(line, ext):
         if quote:
             if escaped:
                 escaped = False
-            elif char == "\\\\":
+            elif ord(char) == 92:
                 escaped = True
             elif char == quote:
                 quote = None
             i += 1
             continue
-        if char in ("\\'", '"', "`"):
+        if char in (chr(39), chr(34), chr(96)):
             quote = char
             i += 1
             continue
@@ -218,7 +218,6 @@ def _strip_line_comment(line, ext):
                 return line[:i]
         i += 1
     return line
-
 
 def _scan_language_lines(content, rel_path, ext):
     findings = []
