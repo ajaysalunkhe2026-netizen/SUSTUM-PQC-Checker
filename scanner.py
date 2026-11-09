@@ -58,22 +58,30 @@ class CryptoASTVisitor(ast.NodeVisitor):
         self.filename = filename
         self.findings = []
         self.crypto_imports = set()
+        self.aliases = {}
 
     def visit_Import(self, node):
         for alias in node.names:
-            if any(x in alias.name.lower() for x in ("cryptography", " Crypto", "pycrypto", "nacl", "oqs")):
-                self.crypto_imports.add(alias.asname or alias.name.split(".")[0])
+            if any(x in alias.name.lower() for x in ("cryptography", "crypto", "nacl", "oqs")):
+                local_name = alias.asname or alias.name.split(".")[0]
+                self.crypto_imports.add(local_name)
+                self.aliases[local_name] = alias.name
         self.generic_visit(node)
 
     def visit_ImportFrom(self, node):
         module = node.module or ""
         if any(x in module.lower() for x in ("cryptography", "crypto", "nacl", "oqs")):
             for alias in node.names:
-                self.crypto_imports.add(alias.asname or alias.name)
+                local_name = alias.asname or alias.name
+                self.crypto_imports.add(local_name)
+                self.aliases[local_name] = module + "." + alias.name
         self.generic_visit(node)
 
     def visit_Call(self, node):
         name = _dotted_name(node.func)
+        parts = name.split(".")
+        if parts and parts[0] in self.aliases:
+            name = self.aliases[parts[0]] + ("." + ".".join(parts[1:]) if len(parts) > 1 else "")
         low = name.lower()
         if any(token in low for token in ("rsa.generate_private_key", "ec.generate_private_key",
                                           "dsa.generate_private_key", "dh.generate_parameters")):
