@@ -329,8 +329,31 @@ def _scan_language_lines(content, rel_path, ext):
     findings = []
     patterns = LANGUAGE_PATTERNS.get(ext, [])
     clean_content = _strip_source_comments(content, ext)
-    for line_no, raw_line in enumerate(clean_content.splitlines(), 1):
+    source_lines = clean_content.splitlines()
+    aliases = {}
+    if ext in {".js", ".ts"}:
+        for source_line in source_lines:
+            match = re.search(
+                r'\\b(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:require\\(\\s*["\\']crypto["\\']\\s*\\)|crypto)\\s*;?',
+                source_line)
+            if match:
+                aliases[match.group(1)] = "crypto"
+            match = re.search(
+                r'import\\s+\\*\\s+as\\s+([A-Za-z_$][\\w$]*)\\s+from\\s+["\\']crypto["\\']',
+                source_line)
+            if match:
+                aliases[match.group(1)] = "crypto"
+    elif ext == ".go":
+        for source_line in source_lines:
+            match = re.search(
+                r'\\b(?:(\\w+)\\s+)?["\\']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["\\']',
+                source_line)
+            if match:
+                aliases[match.group(1) or match.group(2)] = match.group(2)
+    for line_no, raw_line in enumerate(source_lines, 1):
         line = raw_line
+        for alias, canonical in aliases.items():
+            line = re.sub(r'\\b' + re.escape(alias) + r'\\s*\\.', canonical + ".", line)
         if not line.strip():
             continue
         for pattern, algorithm, purpose, vulnerable, confidence in patterns:
