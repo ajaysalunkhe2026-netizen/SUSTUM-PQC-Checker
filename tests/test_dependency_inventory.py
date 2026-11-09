@@ -4,6 +4,8 @@ import tempfile
 import unittest
 
 from scanner import scan_directory
+from recommend import generate_sbom
+from cbom_validation import validate_sbom
 
 
 class DependencyManifestTests(unittest.TestCase):
@@ -58,7 +60,7 @@ class DependencyManifestTests(unittest.TestCase):
             })
         })
         self.assertEqual({x["library"] for x in findings}, {"left-pad", "child"})
-        self.assertTrue(all(x["version_kind"] == "locked" for x in findings))
+        self.assertTrue(all(x["version_kind"] == "locked" for x in findings))\n        self.assertEqual(next(x for x in findings if x["library"] == "left-pad")["dependency_relationship"], "direct")\n        self.assertEqual(next(x for x in findings if x["library"] == "child")["dependency_relationship"], "transitive")
 
     def test_npm_lock_v1_recurses_nested_dependencies(self):
         findings = self._scan({
@@ -83,6 +85,23 @@ class DependencyManifestTests(unittest.TestCase):
         self.assertTrue(all(x["version_kind"] == "checksum-recorded" for x in findings))
         self.assertTrue(all(x["dependency_relationship"] == "unknown" for x in findings))
         self.assertTrue(all(x["vulnerable"] is None for x in findings))
+
+    def test_dependency_provenance_survives_cbom_serialization(self):
+        item = {
+            "asset_type": "Dependency", "algorithm": "cryptography",
+            "library": "cryptography", "version": "==42.0.0",
+            "location": "Pipfile.lock", "purpose": "Dependency inventory",
+            "confidence": "Manifest entry", "evidence": "lockfile record",
+            "vulnerable": None, "ecosystem": "pypi",
+            "source_kind": "Pipfile.lock default", "dependency_scope": "runtime",
+            "dependency_relationship": "direct", "version_kind": "locked"
+        }
+        bom = generate_sbom([item], "sample")
+        self.assertTrue(validate_sbom(bom)["valid"])
+        properties = {p["name"]: p["value"] for p in bom["components"][0]["properties"]}
+        self.assertEqual(properties["sustum:version_kind"], "locked")
+        self.assertEqual(properties["sustum:dependency_relationship"], "direct")
+        self.assertEqual(properties["sustum:ecosystem"], "pypi")
 
     def test_malformed_manifest_is_reported_as_no_inventory_not_crash(self):
         findings = self._scan({"pyproject.toml": "[project\ninvalid"})
