@@ -65,6 +65,23 @@ class ScannerTests(unittest.TestCase):
                 )
             self.assertEqual(scan_directory(root), [])
 
+    def test_assigned_alias_to_crypto_wrapper_is_linked(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "wrapper_alias.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                    "def build_key():\n"
+                    "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+                    "make_key = build_key\n"
+                    "key = make_key()\n"
+                )
+            findings = scan_directory(root)
+            self.assertTrue(any(
+                x["confidence"] == "Interprocedural wrapper call"
+                and x["location"].endswith(":5") for x in findings
+            ), findings)
+
     def test_generated_key_alias_tracks_later_sign_operation(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "key_usage.py")
