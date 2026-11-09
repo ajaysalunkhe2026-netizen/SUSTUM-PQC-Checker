@@ -74,7 +74,7 @@ TEXT_PATTERNS = [
     (re.compile(r"\bECDSA\b", re.I), "ECDSA", "Signature", True),
     (re.compile(r"\bECDH\b", re.I), "ECDH", "Key establishment", True),
     (re.compile(r"\b(?:secp256r1|prime256v1|P-256|P-384)\b", re.I), "Elliptic-curve parameter", "Key establishment / signature", True),
-    (re.compile(r"\bDSA\b", re.I), "DSA", "Signature", True),
+    (re.compile(r"(?<![A-Z0-9-])DSA(?![A-Z0-9-])", re.I), "DSA", "Signature", True),
     (re.compile(r"\bSHA-?1\b", re.I), "SHA-1", "Hash", False),
     (re.compile(r"\bTLS[-_ ]?1[.]2\b", re.I), "TLS 1.2", "Protocol configuration", False),
     (re.compile(r"\b(?:ML-KEM|ML-DSA|SLH-DSA|Kyber|Dilithium)\b", re.I), "PQC algorithm reference", "PQC reference", False),
@@ -395,7 +395,7 @@ def scan_file(filepath, relative_path=None):
     rel_path = relative_path or os.path.basename(filepath)
     ext = os.path.splitext(filepath)[1].lower()
     try:
-        with open(filepath, "r", encoding="utf-8", errors="replace") as handle:
+        with open(filepath, "r", encoding="utf-8-sig", errors="replace") as handle:
             content = handle.read()
     except OSError:
         return findings
