@@ -91,7 +91,7 @@ class ScannerTests(unittest.TestCase):
     def test_python_string_and_inline_comment_are_not_text_findings(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "logging.py"), "w", encoding="utf-8") as handle:
-                handle.write("message = 'RSA is mentioned in a string'\\nvalue = 1  # ECDH note\\n")
+                handle.write("message = 'RSA is mentioned in a string'\nvalue = 1  # ECDH note\n")
             self.assertEqual(scan_directory(root), [])
 
     def test_syntax_error_becomes_diagnostic(self):
