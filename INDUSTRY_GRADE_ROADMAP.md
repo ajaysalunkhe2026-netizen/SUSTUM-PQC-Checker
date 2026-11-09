@@ -1,6 +1,6 @@
 # Industry-grade CBOM engineering plan
 
-**Status:** Architecture audit baseline; implementation has not yet started beyond the existing prototype.
+**Status:** Architecture audit recorded; Phase 1 dependency-inventory foundation implemented and under continued expansion.
 **Working branch:** `feature/reliable-pqc-cbom`
 **Baseline commit audited:** `6324c214b5b764afb3d5c3b251a8017f1195a3a8`
 **Main branch:** intentionally unchanged.
