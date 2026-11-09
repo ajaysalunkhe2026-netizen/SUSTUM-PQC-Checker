@@ -43,11 +43,16 @@ class ScannerTests(unittest.TestCase):
                     "from cryptography.hazmat.primitives.asymmetric import rsa\n"
                     "def build_key():\n"
                     "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+                    "key = build_key()\n"
                 )
             findings = scan_directory(root)
             self.assertTrue(any(
                 x["algorithm"] == "RSA" and x["purpose"] == "Key generation"
                 and x["location"].endswith(":3") for x in findings
+            ), findings)
+            self.assertTrue(any(
+                x["algorithm"] == "RSA" and x["confidence"] == "Interprocedural wrapper call"
+                and x["location"].endswith(":4") for x in findings
             ), findings)
 
     def test_unrelated_sign_method_is_not_assumed_crypto(self):
