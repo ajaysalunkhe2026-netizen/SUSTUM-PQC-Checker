@@ -27,6 +27,13 @@ CASES = [
                "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
                "key = build_key()\n",
      "expected": "RSA"},
+    {"id": "py-wrapper-assigned-alias", "label": "positive", "file": "wrapper_alias.py",
+     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+               "def build_key():\n"
+               "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+               "make_key = build_key\n"
+               "key = make_key()\n",
+     "expected": "RSA"},
     {"id": "py-key-dataflow", "label": "positive", "file": "key_usage.py",
      "source": "from cryptography.hazmat.primitives.asymmetric import rsa\n"
                "private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
