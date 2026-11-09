@@ -194,6 +194,20 @@ class ScannerTests(unittest.TestCase):
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and "OpenSSL API" in x["confidence"] for x in findings))
 
+    def test_javascript_require_crypto_alias_is_resolved(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto_alias.js"), "w", encoding="utf-8") as handle:
+                handle.write("const nodeCrypto = require('crypto');\nnodeCrypto.generateKeyPairSync('rsa', {});\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" for x in findings), findings)
+
+    def test_go_crypto_rsa_import_alias_is_resolved(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto_alias.go"), "w", encoding="utf-8") as handle:
+                handle.write('import cryptorsa "crypto/rsa"\ncryptorsa.GenerateKey(rand.Reader, 2048)\n')
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" for x in findings), findings)
+
     def test_go_mod_is_inventory_only(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "go.mod"), "w", encoding="utf-8") as handle:
