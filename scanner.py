@@ -399,7 +399,7 @@ def scan_file(filepath, relative_path=None):
             content = handle.read()
         # Be defensive with archives containing a Unicode BOM character in the
         # decoded text (including files where it is not the first byte).
-        content = content.lstrip("\\ufeff")
+        content = content.lstrip("\ufeff")
     except OSError:
         return findings
 
