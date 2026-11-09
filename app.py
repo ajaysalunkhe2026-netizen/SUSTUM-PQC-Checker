@@ -104,7 +104,7 @@ def scan_endpoint():
             "findings": len(recs),
             "algorithm_findings": sum(1 for row in recs if row.get("asset_type") == "Algorithm"),
             "vulnerable_indicator_count": sum(1 for row in recs if row.get("vulnerable") is True),
-            "unknown_count": sum(1 for row in recs if row.get("vulnerable") is None),
+            "unknown_count": sum(1 for row in recs if row.get("vulnerable") is None and row.get("asset_type") != "Dependency"),
             "dependency_count": sum(1 for row in recs if row.get("asset_type") == "Dependency"),
             "recommendations": recs,
             "decision": decision,
