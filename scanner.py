@@ -230,6 +230,7 @@ class CryptoASTVisitor(ast.NodeVisitor):
                 self.findings.append(_finding(f"{self.filename}:{node.lineno}", "PQC API reference",
                     "PQC operation", "High-confidence API reference", name, False))
             elif (name.split(".")[-1].lower() in {"sign", "verify", "exchange"} and self.aliases
+                  and any(token in low for token in ("cryptography", "nacl", "oqs", "crypto"))
                   and not (isinstance(node.func, ast.Attribute)
                            and isinstance(node.func.value, ast.Name)
                            and node.func.value.id in self.crypto_objects)):
