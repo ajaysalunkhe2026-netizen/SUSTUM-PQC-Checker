@@ -35,6 +35,31 @@ class ScannerTests(unittest.TestCase):
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" for x in findings))
 
+    def test_assigned_python_crypto_function_alias_is_resolved(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "crypto_alias.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\\n"
+                    "make_key = rsa.generate_private_key\\n"
+                    "key_factory = make_key\\n"
+                    "key = key_factory(public_exponent=65537, key_size=2048)\\n"
+                )
+            findings = scan_directory(root)
+            self.assertTrue(any(
+                x["algorithm"] == "RSA" and x["purpose"] == "Key generation"
+                and "generate_private_key" in x["evidence"] for x in findings
+            ))
+
+    def test_contextual_node_sign_api_is_not_mislabelled_as_rsa_algorithm(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "sign.js")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("const signer = createSign('RSA-SHA256');\\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "Signature operation" for x in findings))
+            self.assertFalse(any(x["algorithm"] == "RSA" for x in findings))
+
     def test_comments_are_not_text_findings(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "plain.py"), "w", encoding="utf-8") as handle:
