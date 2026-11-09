@@ -106,6 +106,11 @@ class ReportAndRecommendationTests(unittest.TestCase):
         self.assertTrue(result["valid"], result["errors"])
         self.assertEqual(result["spec_version"], "1.6")
 
+    def test_invalid_cbom_is_rejected_by_cyclonedx_validator(self):
+        result = validate_sbom({"bomFormat": "NotCycloneDX", "specVersion": "1.6"})
+        self.assertFalse(result["valid"])
+        self.assertTrue(result["errors"])
+
     def test_html_escapes_untrusted_values(self):
         html = render_report("<script>alert(1)</script>", "NIST", [], "Conditional",
                              "<img src=x onerror=alert(1)>", {}, {"bomFormat": "CycloneDX"})
@@ -150,6 +155,7 @@ class UploadTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"SUSTUM", response.data)
         self.assertIn(b"Run scan", response.data)
+        self.assertIn(b"cbom-validation", response.data)
 
     def test_zip_traversal_is_rejected(self):
         with tempfile.TemporaryDirectory() as root:
