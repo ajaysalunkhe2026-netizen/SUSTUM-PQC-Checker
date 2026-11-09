@@ -397,6 +397,9 @@ def scan_file(filepath, relative_path=None):
     try:
         with open(filepath, "r", encoding="utf-8-sig", errors="replace") as handle:
             content = handle.read()
+        # Be defensive with archives containing a Unicode BOM character in the
+        # decoded text (including files where it is not the first byte).
+        content = content.lstrip("\\ufeff")
     except OSError:
         return findings
 
@@ -429,9 +432,16 @@ def scan_file(filepath, relative_path=None):
                 findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose,
                     "Textual indicator", line.strip()[:240], vulnerable))
 
-    # Remove exact duplicates produced by overlapping API and keyword rules.
+    # A PQC signature identifier contains the substring "DSA", but it is
+    # not the legacy Digital Signature Algorithm. Keep this final guard even
+    # when another detector adds an overlapping DSA finding.
     unique = {}
     for item in findings:
+        if item.get("algorithm") == "DSA" and re.search(
+            r"\\b(?:ML-DSA(?:-44|-65|-87)?|SLH-DSA(?:-[A-Z0-9-]+)?)\\b",
+            str(item.get("evidence", "")), re.I
+        ):
+            continue
         key = (item["location"], item["algorithm"], item["purpose"], item["evidence"])
         unique[key] = item
     return list(unique.values())
