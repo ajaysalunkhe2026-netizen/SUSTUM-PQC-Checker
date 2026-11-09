@@ -50,6 +50,22 @@ class ScannerTests(unittest.TestCase):
                 and x["location"].endswith(":3") for x in findings
             ), findings)
 
+    def test_generated_key_alias_tracks_later_sign_operation(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "key_usage.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                    "private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+                    "signing_key = private_key\n"
+                    "signature = signing_key.sign(b'payload', padding, algorithm)\n"
+                )
+            findings = scan_directory(root)
+            self.assertTrue(any(
+                x["algorithm"] == "RSA" and x["purpose"] == "Signature"
+                and x["confidence"] == "Contextual data-flow" for x in findings
+            ), findings)
+
     def test_assigned_python_crypto_function_alias_is_resolved(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "crypto_alias.py")
