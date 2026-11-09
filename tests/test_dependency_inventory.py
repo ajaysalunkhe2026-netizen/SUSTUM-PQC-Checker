@@ -53,7 +53,7 @@ class DependencyManifestTests(unittest.TestCase):
             "package-lock.json": json.dumps({
                 "lockfileVersion": 3,
                 "packages": {
-                    "": {"name": "demo"},
+                    "": {"name": "demo", "dependencies": {"left-pad": "^1.3.0"}},
                     "node_modules/left-pad": {"version": "1.3.0"},
                     "node_modules/parent/node_modules/child": {"version": "2.0.0"}
                 }
