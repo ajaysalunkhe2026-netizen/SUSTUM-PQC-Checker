@@ -66,6 +66,13 @@ class ScannerTests(unittest.TestCase):
                 and "generate_private_key" in x["evidence"] for x in findings
             ), findings)
 
+    def test_inline_javascript_comment_is_not_a_crypto_finding(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "plain.js")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("const answer = 42; // RSA-2048 is only a comment\\n")
+            self.assertEqual(scan_directory(root), [])
+
     def test_contextual_node_sign_api_is_not_mislabelled_as_rsa_algorithm(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "sign.js")
