@@ -37,6 +37,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ~~~
 
+## Run the dashboard locally
+
+~~~bash
+python app.py
+~~~
+
+Open http://127.0.0.1:5050/ in a browser. The dashboard uploads a ZIP to the local Flask service, displays returned static findings, and offers CBOM JSON and HTML report downloads. Recent scan history stores only archive names, finding counts and timestamps in that browser's local storage; it is not server-side history. The dashboard does not add authentication or make this service safe for public exposure.
+
 ## Run the API locally
 
 ~~~bash
