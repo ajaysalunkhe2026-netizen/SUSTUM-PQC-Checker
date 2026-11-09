@@ -19,7 +19,7 @@ CASES = [
      "source": "from cryptography.hazmat.primitives.asymmetric import rsa\nkey = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n",
      "expected": "RSA"},
     {"id": "py-assigned-alias", "label": "positive", "file": "alias.py",
-     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\\nmake_key = rsa.generate_private_key\\nkey = make_key(public_exponent=65537, key_size=2048)\\n",
+     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\nmake_key = rsa.generate_private_key\nkey = make_key(public_exponent=65537, key_size=2048)\n",
      "expected": "RSA"},
     {"id": "java-jca-rsa", "label": "positive", "file": "Crypto.java",
      "source": 'KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");\n',
