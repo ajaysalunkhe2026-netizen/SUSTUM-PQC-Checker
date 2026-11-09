@@ -111,6 +111,7 @@ class CryptoASTVisitor(ast.NodeVisitor):
         self.filename = filename
         self.findings = []
         self.aliases = {}
+        self.crypto_objects = {}
 
     def visit_Import(self, node):
         for alias in node.names:
@@ -138,9 +139,11 @@ class CryptoASTVisitor(ast.NodeVisitor):
 
     def _visit_scoped_node(self, node):
         # Keep local aliases from leaking into sibling functions/classes.
-        previous = self.aliases.copy()
+        previous_aliases = self.aliases.copy()
+        previous_objects = self.crypto_objects.copy()
         self.generic_visit(node)
-        self.aliases = previous
+        self.aliases = previous_aliases
+        self.crypto_objects = previous_objects
 
     def visit_FunctionDef(self, node):
         self._visit_scoped_node(node)
@@ -151,23 +154,67 @@ class CryptoASTVisitor(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         self._visit_scoped_node(node)
 
+    def _generation_algorithm(self, name):
+        low = name.lower()
+        for marker, algorithm in (
+            ("rsa.generate_private_key", "RSA"),
+            ("ec.generate_private_key", "Elliptic Curve"),
+            ("dsa.generate_private_key", "DSA"),
+            ("dh.generate_parameters", "Diffie-Hellman"),
+        ):
+            if marker in low:
+                return algorithm
+        return None
+
+    def _track_assignment(self, targets, value):
+        for assigned in targets:
+            if not isinstance(assigned, ast.Name):
+                continue
+            if isinstance(value, (ast.Name, ast.Attribute)):
+                target = self._resolve_alias(_dotted_name(value))
+                self.aliases[assigned.id] = target
+                if isinstance(value, ast.Name) and value.id in self.crypto_objects:
+                    self.crypto_objects[assigned.id] = self.crypto_objects[value.id]
+                else:
+                    self.crypto_objects.pop(assigned.id, None)
+            elif isinstance(value, ast.Call):
+                called = self._resolve_alias(_dotted_name(value.func))
+                algorithm = self._generation_algorithm(called)
+                if algorithm:
+                    self.crypto_objects[assigned.id] = algorithm
+                else:
+                    self.crypto_objects.pop(assigned.id, None)
+                self.aliases.pop(assigned.id, None)
+            else:
+                self.aliases.pop(assigned.id, None)
+                self.crypto_objects.pop(assigned.id, None)
+
     def visit_Assign(self, node):
-        # Track simple aliases such as make_key = rsa.generate_private_key.
-        if isinstance(node.value, (ast.Name, ast.Attribute)):
-            target = self._resolve_alias(_dotted_name(node.value))
-            for assigned in node.targets:
-                if isinstance(assigned, ast.Name):
-                    self.aliases[assigned.id] = target
+        self._track_assignment(node.targets, node.value)
         self.generic_visit(node)
 
     def visit_AnnAssign(self, node):
-        if isinstance(node.target, ast.Name) and isinstance(node.value, (ast.Name, ast.Attribute)):
-            self.aliases[node.target.id] = self._resolve_alias(_dotted_name(node.value))
+        if node.value is not None:
+            self._track_assignment([node.target], node.value)
         self.generic_visit(node)
 
     def visit_Call(self, node):
         name = self._resolve_alias(_dotted_name(node.func))
         low = name.lower()
+        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+            object_name = node.func.value.id
+            operation = node.func.attr.lower()
+            if object_name in self.crypto_objects and operation in {"sign", "verify", "exchange", "decrypt", "encrypt"}:
+                purpose = {
+                    "sign": "Signature",
+                    "verify": "Signature verification",
+                    "exchange": "Key establishment",
+                    "decrypt": "Decryption",
+                    "encrypt": "Encryption",
+                }[operation]
+                self.findings.append(_finding(
+                    f"{self.filename}:{node.lineno}", self.crypto_objects[object_name], purpose,
+                    "Contextual data-flow", name, True))
         for marker, algorithm, purpose in (
             ("rsa.generate_private_key", "RSA", "Key generation"),
             ("ec.generate_private_key", "Elliptic Curve", "Key generation"),
