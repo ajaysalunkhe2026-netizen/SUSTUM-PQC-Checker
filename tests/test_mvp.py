@@ -23,6 +23,17 @@ class ScannerTests(unittest.TestCase):
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and x["vulnerable"] is True for x in findings))
 
+    def test_aliased_python_crypto_import_is_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "crypto_alias.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa as asymmetric_rsa\n"
+                    "key = asymmetric_rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+                )
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" for x in findings))
+
     def test_comments_are_not_text_findings(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "plain.py"), "w", encoding="utf-8") as handle:
@@ -59,6 +70,13 @@ class ReportAndRecommendationTests(unittest.TestCase):
                 "algorithm": "cryptography", "vulnerable": None}
         result = recommend([item], "nist")[0]
         self.assertEqual(result["mode"], "Inventory only")
+
+    def test_rsa_key_generation_is_not_mapped_to_one_pqc_algorithm(self):
+        item = {"asset_type": "Algorithm", "algorithm": "RSA",
+                "purpose": "Signature / key establishment", "vulnerable": True}
+        result = recommend([item], "nist")[0]
+        self.assertEqual(result["mode"], "Manual review")
+        self.assertIn("actual RSA key usage", result["recommendation"])
 
     def test_empty_scan_is_not_declared_safe(self):
         decision, reason = decide([])
