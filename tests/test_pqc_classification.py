@@ -34,9 +34,9 @@ class PQCAlgorithmClassificationTests(unittest.TestCase):
 
     def test_utf8_bom_python_file_parses_without_parse_diagnostic(self):
         source = (
-            b"\\xef\\xbb\\xbf"
-            b"from cryptography.hazmat.primitives.asymmetric import rsa\\n"
-            b"key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\\n"
+            b"\xef\xbb\xbf"
+            b"from cryptography.hazmat.primitives.asymmetric import rsa\n"
+            b"key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
         )
         findings = self._scan("bom_source.py", source, binary=True)
         self.assertFalse(any(x["asset_type"] == "Scanner diagnostic" and
