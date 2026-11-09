@@ -9,6 +9,7 @@ from flask_cors import CORS
 from scanner import scan_directory
 from recommend import recommend, decide, impact, generate_sbom
 from report import render_report
+from cbom_validation import validate_sbom
 
 app = Flask(__name__)
 # Prototype default: local API only. Configure explicit trusted origins before deployment.
@@ -96,6 +97,7 @@ def scan_endpoint():
         decision, reason = decide(recs)
         impact_data = impact(recs)
         sbom = generate_sbom(raw_items, safe_name)
+        sbom_validation = validate_sbom(sbom)
         html_content = render_report(safe_name, guideline.upper(), recs,
                                      decision, reason, impact_data, sbom)
         return jsonify({
@@ -111,11 +113,12 @@ def scan_endpoint():
             "reason": reason,
             "report_html": html_content,
             "sbom_generated": True,
+            "sbom_validation": sbom_validation,
             "sbom": sbom,
             "limitations": [
                 "Static source and manifest analysis only; no runtime or network discovery.",
                 "A manifest entry does not prove that a dependency uses cryptography.",
-                "CBOM output requires validation against the selected CycloneDX schema before compliance use."
+                "Static indicators do not prove reachability, production use, or complete cryptographic coverage."
             ]
         })
 
