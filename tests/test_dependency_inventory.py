@@ -63,6 +63,8 @@ class DependencyManifestTests(unittest.TestCase):
         self.assertTrue(all(x["version_kind"] == "locked" for x in findings))
         self.assertEqual(next(x for x in findings if x["library"] == "left-pad")["dependency_relationship"], "direct")
         self.assertEqual(next(x for x in findings if x["library"] == "child")["dependency_relationship"], "transitive")
+        self.assertEqual(next(x for x in findings if x["library"] == "child")["location"],
+                         "package-lock.json::node_modules/parent/node_modules/child")
 
     def test_npm_lock_v1_recurses_nested_dependencies(self):
         findings = self._scan({
