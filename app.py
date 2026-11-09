@@ -1,88 +1,102 @@
 import os
-import zipfile
 import tempfile
+import zipfile
+from pathlib import PurePosixPath
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Importing our custom modules
 from scanner import scan_directory
 from recommend import recommend, decide, impact, generate_sbom
 from report import render_report
 
 app = Flask(__name__)
 CORS(app)
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
+MAX_UNCOMPRESSED_SIZE = 500 * 1024 * 1024
+MAX_FILES = 10000
 
-# 1. Upload Size Limit (e.g., 200 MB max)
-app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024 
-
-# Enterprise Limit Configurations
-MAX_UNCOMPRESSED_SIZE = 500 * 1024 * 1024  # 500 MB max extracted size
 
 def safe_extract(zip_ref, extract_path):
-    """Safely extract zip files to prevent Zip Bombs"""
+    """Extract a ZIP while rejecting traversal, symlinks and oversized archives."""
     total_size = 0
-    for info in zip_ref.infolist():
+    infos = zip_ref.infolist()
+    if len(infos) > MAX_FILES:
+        raise ValueError("Archive contains too many entries.")
+    for info in infos:
+        name = info.filename.replace("\\", "/")
+        path = PurePosixPath(name)
+        mode = (info.external_attr >> 16) & 0o170000
+        if path.is_absolute() or ".." in path.parts or mode == 0o120000:
+            raise ValueError("Unsafe ZIP entry path or symlink detected.")
         total_size += info.file_size
         if total_size > MAX_UNCOMPRESSED_SIZE:
-            raise ValueError("Extraction failed: Zip Bomb detected or uncompressed size exceeds 500MB limit.")
-        
-        # Extract file safely
-        zip_ref.extract(info, extract_path)
+            raise ValueError("Uncompressed archive exceeds 500 MB limit.")
+        if info.is_dir():
+            continue
+        destination = os.path.realpath(os.path.join(extract_path, *path.parts))
+        if os.path.commonpath([os.path.realpath(extract_path), destination]) != os.path.realpath(extract_path):
+            raise ValueError("ZIP entry escapes extraction directory.")
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
+        with zip_ref.open(info) as source, open(destination, "wb") as target:
+            target.write(source.read(MAX_UNCOMPRESSED_SIZE + 1))
+            if os.path.getsize(destination) > MAX_UNCOMPRESSED_SIZE:
+                raise ValueError("Extracted file exceeds configured limit.")
 
-@app.route('/scan', methods=['POST'])
+
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok", "service": "SUSTUM PQC Checker"})
+
+
+@app.post("/scan")
 def scan_endpoint():
-    if 'file' not in request.files:
+    if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
-        
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "Empty filename"}), 400
-
+    upload = request.files["file"]
+    if not upload.filename or not upload.filename.lower().endswith(".zip"):
+        return jsonify({"error": "Upload a ZIP archive with a .zip filename"}), 400
     guideline = request.form.get("guideline", "nist").lower()
-    part_name = file.filename
+    if guideline not in {"nist", "cnsa"}:
+        return jsonify({"error": "guideline must be 'nist' or 'cnsa'"}), 400
 
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "upload.zip")
-        file.save(zip_path)
-        
+        upload.save(zip_path)
         extract_dir = os.path.join(tmpdir, "source")
-        os.makedirs(extract_dir, exist_ok=True)
-        
+        os.makedirs(extract_dir)
         try:
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                # 2. Safe Extraction (Zip Bomb check)
-                safe_extract(zip_ref, extract_dir)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 413 # 413 Payload Too Large
-            
-        # 3. Run Scanner
+            with zipfile.ZipFile(zip_path) as archive:
+                if archive.testzip() is not None:
+                    return jsonify({"error": "ZIP integrity check failed"}), 400
+                safe_extract(archive, extract_dir)
+        except (zipfile.BadZipFile, OSError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
+
         raw_items = scan_directory(extract_dir)
-        
-        # 4. Run Recommendations & Logic
         recs = recommend(raw_items, guideline)
         decision, reason = decide(recs)
         impact_data = impact(recs)
-        
-        # 5. Generate HTML Report and save it locally
-        html_content = render_report(part_name, guideline.upper(), recs, decision, reason, impact_data)
-        
+        sbom = generate_sbom(raw_items, os.path.basename(upload.filename))
+        html_content = render_report(os.path.basename(upload.filename), guideline.upper(),
+                                     recs, decision, reason, impact_data, sbom)
         report_path = os.path.abspath("report.html")
-        with open(report_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        
-        # 6. Generate JSON response matching your CLI/Frontend output
-        response_data = {
-            "part": part_name,
+        with open(report_path, "w", encoding="utf-8") as handle:
+            handle.write(html_content)
+
+        return jsonify({
+            "part": os.path.basename(upload.filename),
             "guideline": guideline,
             "findings": len(recs),
+            "algorithm_findings": sum(1 for row in recs if row.get("asset_type") == "Algorithm"),
+            "dependency_count": sum(1 for row in recs if row.get("asset_type") == "Dependency"),
             "decision": decision,
             "reason": reason,
             "report": report_path,
-            "sbom_generated": True
-        }
-        
-        return jsonify(response_data)
+            "sbom_generated": True,
+            "sbom": sbom
+        })
 
-if __name__ == '__main__':
-    # Running securely on localhost port 8080 with Multi-threading enabled
-    app.run(host='127.0.0.1', port=5050, threaded=True)
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=5050, threaded=True)
