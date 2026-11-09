@@ -125,11 +125,33 @@ class CryptoASTVisitor(ast.NodeVisitor):
                 self.aliases[alias.asname or alias.name] = module + "." + alias.name
         self.generic_visit(node)
 
-    def visit_Call(self, node):
-        name = _dotted_name(node.func)
+    def _resolve_alias(self, name):
+        """Resolve imported and simple assignment aliases without executing code."""
         parts = name.split(".")
-        if parts and parts[0] in self.aliases:
-            name = self.aliases[parts[0]] + ("." + ".".join(parts[1:]) if len(parts) > 1 else "")
+        seen = set()
+        while parts and parts[0] in self.aliases and parts[0] not in seen:
+            seen.add(parts[0])
+            target = self.aliases[parts[0]]
+            name = target + ("." + ".".join(parts[1:]) if len(parts) > 1 else "")
+            parts = name.split(".")
+        return name
+
+    def visit_Assign(self, node):
+        # Track simple aliases such as make_key = rsa.generate_private_key.
+        if isinstance(node.value, (ast.Name, ast.Attribute)):
+            target = self._resolve_alias(_dotted_name(node.value))
+            for assigned in node.targets:
+                if isinstance(assigned, ast.Name):
+                    self.aliases[assigned.id] = target
+        self.generic_visit(node)
+
+    def visit_AnnAssign(self, node):
+        if isinstance(node.target, ast.Name) and isinstance(node.value, (ast.Name, ast.Attribute)):
+            self.aliases[node.target.id] = self._resolve_alias(_dotted_name(node.value))
+        self.generic_visit(node)
+
+    def visit_Call(self, node):
+        name = self._resolve_alias(_dotted_name(node.func))
         low = name.lower()
         for marker, algorithm, purpose in (
             ("rsa.generate_private_key", "RSA", "Key generation"),
