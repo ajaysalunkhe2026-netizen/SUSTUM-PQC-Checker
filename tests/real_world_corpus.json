@@ -56,7 +56,10 @@
         "path": "src/crypto/rsa/rsa_test.go",
         "original_lines": "14-16 and 43-49",
         "license": "BSD-3-Clause",
-        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/rsa/rsa_test.go#L14-L16"
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/rsa/rsa_test.go#L14-L16",
+        "related_urls": [
+          "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/rsa/rsa_test.go#L43-L55"
+        ]
       },
       "ground_truth_basis": "Go standard-library RSA test uses dot-imported crypto/rsa GenerateKey; source excerpt joins the import and call lines for a focused scanner fixture.",
       "review_status": "provisional_source_review"
