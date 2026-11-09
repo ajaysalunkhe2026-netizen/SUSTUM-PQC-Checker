@@ -93,8 +93,10 @@ def parse_pipfile(path, rel_path):
     try:
         with open(path, "rb") as handle:
             data = tomllib.load(handle)
-    except (OSError, ValueError, TypeError):
-        return []
+    except (OSError, ValueError, TypeError) as exc:
+        return [_diagnostic(rel_path, f"Unable to parse TOML: {exc}")]
+    if not isinstance(data, dict):
+        return [_diagnostic(rel_path, "TOML root must be a table.")]
     rows = []
     for section, scope in (("packages", "runtime"), ("dev-packages", "development")):
         for name, constraint in (data.get(section) or {}).items():
@@ -107,8 +109,10 @@ def parse_pipfile_lock(path, rel_path):
     try:
         with open(path, encoding="utf-8") as handle:
             data = json.load(handle)
-    except (OSError, ValueError):
-        return []
+    except (OSError, ValueError) as exc:
+        return [_diagnostic(rel_path, f"Unable to parse Pipfile.lock JSON: {exc}")]
+    if not isinstance(data, dict):
+        return [_diagnostic(rel_path, "Pipfile.lock JSON root must be an object.")]
     rows = []
     for section, scope in (("default", "runtime"), ("develop", "development")):
         for name, item in (data.get(section) or {}).items():
@@ -138,8 +142,10 @@ def parse_npm_lock(path, rel_path):
     try:
         with open(path, encoding="utf-8") as handle:
             data = json.load(handle)
-    except (OSError, ValueError):
-        return []
+    except (OSError, ValueError) as exc:
+        return [_diagnostic(rel_path, f"Unable to parse npm lockfile JSON: {exc}")]
+    if not isinstance(data, dict):
+        return [_diagnostic(rel_path, "npm lockfile JSON root must be an object.")]
     rows = []
     # npm lockfile v2/v3: package paths include nested node_modules and encode
     # resolved package instances. Root package (empty key) is not a dependency.
@@ -167,7 +173,10 @@ def parse_npm_lock(path, rel_path):
                 continue
             rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json dependencies", relationship))
             walk(item.get("dependencies"), "transitive")
-    walk(data.get("dependencies"), "direct-or-transitive")
+    dependencies = data.get("dependencies")
+    if not isinstance(dependencies, dict):
+        return [_diagnostic(rel_path, "Unsupported npm lockfile structure: expected packages or dependencies object.")]
+    walk(dependencies, "direct-or-transitive")
     return rows
 
 
