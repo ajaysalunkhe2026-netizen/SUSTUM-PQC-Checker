@@ -9,6 +9,7 @@ from app import app, safe_extract
 from recommend import decide, generate_sbom, recommend
 from report import render_report
 from scanner import scan_directory
+from cbom_validation import validate_sbom
 
 
 class ScannerTests(unittest.TestCase):
@@ -49,6 +50,44 @@ class ScannerTests(unittest.TestCase):
             self.assertEqual(findings[0]["asset_type"], "Dependency")
             self.assertIsNone(findings[0]["vulnerable"])
 
+
+    def test_java_rsa_api_is_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "Crypto.java"), "w", encoding="utf-8") as handle:
+                handle.write('KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");\\n')
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" and x["confidence"] == "High-confidence API call" for x in findings))
+
+    def test_javascript_rsa_api_is_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto.js"), "w", encoding="utf-8") as handle:
+                handle.write("crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });\\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" and x["purpose"] == "Key generation" for x in findings))
+
+    def test_go_rsa_api_is_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto.go"), "w", encoding="utf-8") as handle:
+                handle.write("key, err := rsa.GenerateKey(rand.Reader, 2048)\\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" and x["confidence"] == "High-confidence API call" for x in findings))
+
+    def test_c_openssl_rsa_api_is_reported(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "crypto.c"), "w", encoding="utf-8") as handle:
+                handle.write("RSA_generate_key_ex(rsa, bits, e, cb);\\n")
+            findings = scan_directory(root)
+            self.assertTrue(any(x["algorithm"] == "RSA" and "OpenSSL API" in x["confidence"] for x in findings))
+
+    def test_go_mod_is_inventory_only(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "go.mod"), "w", encoding="utf-8") as handle:
+                handle.write("module example.com/demo\\n\\nrequire (\\n github.com/example/crypto v1.2.3\\n)\\n")
+            findings = scan_directory(root)
+            self.assertEqual(len(findings), 1)
+            self.assertEqual(findings[0]["asset_type"], "Dependency")
+            self.assertIsNone(findings[0]["vulnerable"])
+
     def test_syntax_error_becomes_diagnostic(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "broken.py"), "w", encoding="utf-8") as handle:
@@ -58,6 +97,15 @@ class ScannerTests(unittest.TestCase):
 
 
 class ReportAndRecommendationTests(unittest.TestCase):
+
+    def test_generated_cbom_passes_cyclonedx_16_schema(self):
+        item = {"asset_type": "Algorithm", "algorithm": "RSA", "location": "src/a.py:2",
+                "purpose": "Key generation", "confidence": "High-confidence API call",
+                "evidence": "rsa.generate_private_key", "vulnerable": True}
+        result = validate_sbom(generate_sbom([item], "sample"))
+        self.assertTrue(result["valid"], result["errors"])
+        self.assertEqual(result["spec_version"], "1.6")
+
     def test_html_escapes_untrusted_values(self):
         html = render_report("<script>alert(1)</script>", "NIST", [], "Conditional",
                              "<img src=x onerror=alert(1)>", {}, {"bomFormat": "CycloneDX"})
@@ -130,6 +178,7 @@ class UploadTests(unittest.TestCase):
         payload = response.get_json()
         self.assertIn("report_html", payload)
         self.assertIn("sbom", payload)
+        self.assertTrue(payload["sbom_validation"]["valid"], payload["sbom_validation"]["errors"])
         self.assertIn("recommendations", payload)
         self.assertIn("vulnerable_indicator_count", payload)
         self.assertIn("unknown_count", payload)
