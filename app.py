@@ -11,37 +11,50 @@ from recommend import recommend, decide, impact, generate_sbom
 from report import render_report
 
 app = Flask(__name__)
-CORS(app)
+# Prototype default: local API only. Configure explicit trusted origins before deployment.
+CORS(app, resources={r"/health": {"origins": []}, r"/scan": {"origins": []}})
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
 MAX_UNCOMPRESSED_SIZE = 500 * 1024 * 1024
+MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_FILES = 10000
 
 
 def safe_extract(zip_ref, extract_path):
-    """Extract a ZIP while rejecting traversal, symlinks and oversized archives."""
+    """Extract ZIP entries with path, symlink, count and size checks."""
     total_size = 0
     infos = zip_ref.infolist()
     if len(infos) > MAX_FILES:
         raise ValueError("Archive contains too many entries.")
+    root = os.path.realpath(extract_path)
     for info in infos:
         name = info.filename.replace("\\", "/")
         path = PurePosixPath(name)
         mode = (info.external_attr >> 16) & 0o170000
-        if path.is_absolute() or ".." in path.parts or mode == 0o120000:
+        if (not name or "\x00" in name or path.is_absolute()
+                or (path.parts and ":" in path.parts[0])
+                or ".." in path.parts or mode == 0o120000):
             raise ValueError("Unsafe ZIP entry path or symlink detected.")
+        if info.file_size < 0 or info.file_size > MAX_SINGLE_FILE_SIZE:
+            raise ValueError("An archive entry exceeds the 100 MB file limit.")
         total_size += info.file_size
         if total_size > MAX_UNCOMPRESSED_SIZE:
             raise ValueError("Uncompressed archive exceeds 500 MB limit.")
         if info.is_dir():
             continue
-        destination = os.path.realpath(os.path.join(extract_path, *path.parts))
-        if os.path.commonpath([os.path.realpath(extract_path), destination]) != os.path.realpath(extract_path):
+        destination = os.path.realpath(os.path.join(root, *path.parts))
+        if os.path.commonpath([root, destination]) != root:
             raise ValueError("ZIP entry escapes extraction directory.")
         os.makedirs(os.path.dirname(destination), exist_ok=True)
+        written = 0
         with zip_ref.open(info) as source, open(destination, "wb") as target:
-            target.write(source.read(MAX_UNCOMPRESSED_SIZE + 1))
-            if os.path.getsize(destination) > MAX_UNCOMPRESSED_SIZE:
-                raise ValueError("Extracted file exceeds configured limit.")
+            while True:
+                chunk = source.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > MAX_SINGLE_FILE_SIZE:
+                    raise ValueError("An extracted file exceeds the 100 MB file limit.")
+                target.write(chunk)
 
 
 @app.get("/health")
@@ -60,6 +73,7 @@ def scan_endpoint():
     if guideline not in {"nist", "cnsa"}:
         return jsonify({"error": "guideline must be 'nist' or 'cnsa'"}), 400
 
+    safe_name = os.path.basename(upload.filename.replace("\\", "/"))
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "upload.zip")
         upload.save(zip_path)
@@ -67,34 +81,33 @@ def scan_endpoint():
         os.makedirs(extract_dir)
         try:
             with zipfile.ZipFile(zip_path) as archive:
-                if archive.testzip() is not None:
-                    return jsonify({"error": "ZIP integrity check failed"}), 400
                 safe_extract(archive, extract_dir)
-        except (zipfile.BadZipFile, OSError, ValueError) as exc:
+        except (zipfile.BadZipFile, OSError, ValueError, RuntimeError) as exc:
             return jsonify({"error": str(exc)}), 400
 
         raw_items = scan_directory(extract_dir)
         recs = recommend(raw_items, guideline)
         decision, reason = decide(recs)
         impact_data = impact(recs)
-        sbom = generate_sbom(raw_items, os.path.basename(upload.filename))
-        html_content = render_report(os.path.basename(upload.filename), guideline.upper(),
-                                     recs, decision, reason, impact_data, sbom)
-        report_path = os.path.abspath("report.html")
-        with open(report_path, "w", encoding="utf-8") as handle:
-            handle.write(html_content)
-
+        sbom = generate_sbom(raw_items, safe_name)
+        html_content = render_report(safe_name, guideline.upper(), recs,
+                                     decision, reason, impact_data, sbom)
         return jsonify({
-            "part": os.path.basename(upload.filename),
+            "part": safe_name,
             "guideline": guideline,
             "findings": len(recs),
             "algorithm_findings": sum(1 for row in recs if row.get("asset_type") == "Algorithm"),
             "dependency_count": sum(1 for row in recs if row.get("asset_type") == "Dependency"),
             "decision": decision,
             "reason": reason,
-            "report": report_path,
+            "report_html": html_content,
             "sbom_generated": True,
-            "sbom": sbom
+            "sbom": sbom,
+            "limitations": [
+                "Static source and manifest analysis only; no runtime or network discovery.",
+                "A manifest entry does not prove that a dependency uses cryptography.",
+                "CBOM output requires validation against the selected CycloneDX schema before compliance use."
+            ]
         })
 
 
