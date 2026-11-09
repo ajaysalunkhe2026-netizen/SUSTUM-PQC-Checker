@@ -48,7 +48,7 @@ class ScannerTests(unittest.TestCase):
             self.assertTrue(any(
                 x["algorithm"] == "RSA" and x["purpose"] == "Key generation"
                 and x["location"].endswith(":3") for x in findings
-            ))
+            ), findings)
 
     def test_assigned_python_crypto_function_alias_is_resolved(self):
         with tempfile.TemporaryDirectory() as root:
@@ -64,7 +64,7 @@ class ScannerTests(unittest.TestCase):
             self.assertTrue(any(
                 x["algorithm"] == "RSA" and x["purpose"] == "Key generation"
                 and "generate_private_key" in x["evidence"] for x in findings
-            ))
+            ), findings)
 
     def test_contextual_node_sign_api_is_not_mislabelled_as_rsa_algorithm(self):
         with tempfile.TemporaryDirectory() as root:
