@@ -1,4 +1,6 @@
 """Guideline mapping is advisory and deliberately conservative."""
+import hashlib
+import json
 NIST_RULES = [
     (("ECDSA", "Signature"), "ML-DSA-65", "PQC candidate", "Evaluate ML-DSA-65 under NIST FIPS 204."),
     (("ECDH", "Key establishment"), "ML-KEM-768 or an approved hybrid design", "PQC candidate", "Evaluate ML-KEM under NIST FIPS 203 and protocol-specific hybrid guidance."),
@@ -74,23 +76,28 @@ def generate_sbom(items, part_name="sample-part"):
     """
     components = []
     seen = set()
-    for index, item in enumerate(items, 1):
+    ordered_items = sorted(items, key=lambda item: (str(item.get('asset_type', '')), str(item.get('library', '')), str(item.get('algorithm', '')), str(item.get('version', '')), str(item.get('location', '')), str(item.get('source_kind', '')), str(item.get('evidence', ''))))
+    for item in ordered_items:
         if item.get("asset_type") == "Dependency":
             name = item.get("library") or item.get("algorithm") or "unknown-dependency"
             version = item.get("version", "unknown")
-            key = ("library", name, version)
+            location = str(item.get("location", ""))
+            key = ("library", name, version, location)
             if key in seen:
                 continue
             seen.add(key)
-            component = {"type": "library", "bom-ref": f"dependency-{index}",
+            digest = hashlib.sha256(json.dumps(key, separators=(",", ":")).encode("utf-8")).hexdigest()[:20]
+            component = {"type": "library", "bom-ref": f"urn:sustum:dependency:{digest}",
                          "name": name, "version": version}
         else:
             name = item.get("algorithm") or "cryptographic-indicator"
-            key = ("cryptographic-asset", name, item.get("location"))
+            location = str(item.get("location", ""))
+            key = ("cryptographic-asset", name, location)
             if key in seen:
                 continue
             seen.add(key)
-            component = {"type": "cryptographic-asset", "bom-ref": f"crypto-{index}",
+            digest = hashlib.sha256(json.dumps(key, separators=(",", ":")).encode("utf-8")).hexdigest()[:20]
+            component = {"type": "cryptographic-asset", "bom-ref": f"urn:sustum:crypto:{digest}",
                          "name": name}
         props = [
             {"name": "sustum:asset_type", "value": str(item.get("asset_type", "Algorithm"))},
