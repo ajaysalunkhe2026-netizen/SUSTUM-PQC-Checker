@@ -101,6 +101,12 @@ def generate_sbom(items, part_name="sample-part"):
         ]
         if item.get("vulnerable") is not None:
             props.append({"name": "sustum:quantum_vulnerable_indicator", "value": str(bool(item["vulnerable"])).lower()})
+        # Preserve dependency provenance without conflating manifest declarations,
+        # lockfile records, or checksum observations.
+        for field in ("ecosystem", "source_kind", "dependency_scope",
+                      "dependency_relationship", "version_kind"):
+            if item.get(field) is not None:
+                props.append({"name": f"sustum:{field}", "value": str(item[field])})
         component["properties"] = props
         components.append(component)
     return {
