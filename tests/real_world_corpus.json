@@ -27,19 +27,19 @@
       "id": "nodejs-rsa-keygen",
       "label": "positive",
       "extension": ".js",
-      "source": "// Missing / invalid publicKeyEncoding.format.\n  for (const format of [undefined, null, 0, false, 'a', {}]) {\n    assert.throws(() => generateKeyPairSync('rsa', {\n      modulusLength: 4096,\n      publicKeyEncoding: {\n        type: 'pkcs1',\n        format\n",
+      "source": "assert.throws(() => generateKeyPairSync('rsa', {",
       "expected_algorithm": "RSA",
-      "expected_callsite_line": 3,
+      "expected_callsite_line": 1,
       "expected_purpose": "Key generation",
       "provenance": {
         "repository": "nodejs/node",
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "path": "test/parallel/test-crypto-keygen.js",
-        "original_lines": "146-153",
+        "original_lines": "148-148",
         "license": "MIT (Node.js project license)",
-        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L146-L153"
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L148"
       },
-      "ground_truth_basis": "Node.js crypto test imports generateKeyPairSync from crypto and invokes it with RSA key type; source excerpt manually reviewed.",
+      "ground_truth_basis": "Exact upstream callsite invokes generateKeyPairSync with the RSA key type; excerpt reduced to the callsite to avoid unrelated truncated surrounding context.",
       "review_status": "provisional_source_review"
     },
     {
