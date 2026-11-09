@@ -3,7 +3,7 @@ import tempfile
 import zipfile
 from pathlib import PurePosixPath
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
 from scanner import scan_directory
@@ -57,6 +57,12 @@ def safe_extract(zip_ref, extract_path):
                 target.write(chunk)
 
 
+@app.get("/")
+def dashboard():
+    """Serve the browser dashboard for the local prototype."""
+    return render_template("index.html")
+
+
 @app.get("/health")
 def health():
     return jsonify({"status": "ok", "service": "SUSTUM PQC Checker"})
@@ -97,7 +103,10 @@ def scan_endpoint():
             "guideline": guideline,
             "findings": len(recs),
             "algorithm_findings": sum(1 for row in recs if row.get("asset_type") == "Algorithm"),
+            "vulnerable_indicator_count": sum(1 for row in recs if row.get("vulnerable") is True),
+            "unknown_count": sum(1 for row in recs if row.get("vulnerable") is None),
             "dependency_count": sum(1 for row in recs if row.get("asset_type") == "Dependency"),
+            "recommendations": recs,
             "decision": decision,
             "reason": reason,
             "report_html": html_content,
