@@ -1,113 +1,110 @@
+"""Guideline mapping is advisory and deliberately conservative."""
 NIST_RULES = [
-    (("RSA", "Signature"), "ML-DSA-65", "Pure PQC", "NIST FIPS 204: RSA signatures should move to ML-DSA. Impact: Larger signature size."),
-    (("RSA", "Certificate"), "ML-DSA-65 certificate", "Pure PQC", "NIST transition: replace RSA certs with PQC/hybrid PKI plan."),
-    (("RSA", "Key Exchange"), "X25519 + ML-KEM-768", "Hybrid", "NIST/commercial: hybrid KEM during transition."),
-    (("ECDSA", "Signature"), "ML-DSA-65", "Pure PQC", "NIST FIPS 204: ECDSA signatures should move to ML-DSA."),
-    (("ECDSA", "Certificate"), "ML-DSA-65 certificate", "Pure PQC", "Replace ECC certificates as part of PQC PKI transition."),
-    (("ECDH", "Key Exchange"), "X25519 + ML-KEM-768", "Hybrid", "TLS/key exchange: hybrid classical + ML-KEM."),
-    (("X25519", "Key Exchange"), "X25519 + ML-KEM-768", "Hybrid", "Keep X25519 only as hybrid component, add ML-KEM."),
-    (("TLS-1.2", "Key Exchange"), "TLS 1.3 + X25519/ML-KEM", "Hybrid", "Move to TLS 1.3, then hybrid KEM."),
-    (("TLS-1.3", "Key Exchange"), "TLS 1.3 hybrid KEM", "Hybrid", "TLS 1.3 with hybrid key exchange."),
-    (("SHA-1", "Hashing"), "SHA-256 or SHA-384", "Replace", "SHA-1 is deprecated; replace immediately."),
-    (("AES-256", "Encryption"), "AES-256-GCM", "Continue current", "AES-256 remains acceptable for data at rest."),
-    (("SHA-256", "Hashing"), "SHA-256 / SHA-384", "Continue current", "SHA-256 generally acceptable; SHA-384 if policy requires."),
+    (("RSA", "Signature"), "ML-DSA-65", "PQC candidate", "Evaluate ML-DSA-65 under NIST FIPS 204; check protocol and interoperability."),
+    (("RSA", "Signature / key transport"), "Review key usage; evaluate ML-DSA for signatures or ML-KEM for key establishment", "Manual review", "RSA may serve multiple purposes; do not infer replacement from algorithm name alone."),
+    (("ECDSA", "Signature"), "ML-DSA-65", "PQC candidate", "Evaluate ML-DSA-65 under NIST FIPS 204."),
+    (("ECDH", "Key establishment"), "ML-KEM-768 or an approved hybrid design", "PQC candidate", "Evaluate ML-KEM under NIST FIPS 203 and protocol-specific hybrid guidance."),
+    (("SHA-1", "Hash"), "SHA-256 or SHA-384", "Review", "SHA-1 is deprecated for collision-resistant use; assess protocol and compatibility."),
 ]
-
 CNSA_RULES = [
-    (("RSA", "Signature"), "ML-DSA-87", "Pure PQC", "CNSA 2.0: ML-DSA-87 for signatures."),
-    (("RSA", "Certificate"), "ML-DSA-87 certificate", "Pure PQC", "CNSA 2.0 PKI target is ML-DSA-87."),
-    (("RSA", "Key Exchange"), "ML-KEM-1024", "Pure PQC", "CNSA 2.0: ML-KEM-1024 for key establishment."),
-    (("ECDSA", "Signature"), "ML-DSA-87", "Pure PQC", "CNSA 2.0: ML-DSA-87."),
-    (("ECDSA", "Certificate"), "ML-DSA-87 certificate", "Pure PQC", "CNSA 2.0 certificate target."),
-    (("ECDH", "Key Exchange"), "P-384 + ML-KEM-1024", "Hybrid", "CNSA transition hybrid uses P-384 + ML-KEM-1024."),
-    (("X25519", "Key Exchange"), "ML-KEM-1024", "Pure PQC", "X25519 is not a CNSA 2.0 target."),
-    (("TLS-1.2", "Key Exchange"), "TLS 1.3 + ML-KEM-1024", "Pure PQC", "CNSA: prefer TLS 1.3 and CNSA 2.0 algorithms."),
-    (("TLS-1.3", "Key Exchange"), "TLS 1.3 + ML-KEM-1024", "Pure PQC", "CNSA 2.0 key establishment."),
-    (("SHA-1", "Hashing"), "SHA-384", "Replace", "CNSA requires SHA-384/512."),
-    (("AES-256", "Encryption"), "AES-256", "Continue current", "AES-256 is in CNSA 2.0."),
-    (("SHA-256", "Hashing"), "SHA-384", "Replace", "CNSA 2.0 prefers SHA-384."),
+    (("RSA", "Signature"), "ML-DSA-87", "PQC candidate", "Evaluate CNSA 2.0 profile applicability and transition requirements."),
+    (("ECDSA", "Signature"), "ML-DSA-87", "PQC candidate", "Evaluate CNSA 2.0 profile applicability."),
+    (("ECDH", "Key establishment"), "ML-KEM-1024 with approved transition design", "PQC candidate", "Confirm CNSA 2.0 requirements and protocol profile."),
+    (("SHA-1", "Hash"), "SHA-384 or SHA-512", "Review", "Assess CNSA 2.0 requirements and protocol context."),
 ]
 
 
 def match_rule(item, rules):
-    algo = item["algorithm"].upper()
-    purpose = item["purpose"]
-    for (a, p), rec, mode, reason in rules:
-        if a.upper() in algo and (p == purpose or p == "Certificate" and purpose == "Certificate"):
+    if item.get("asset_type") == "Dependency":
+        return "Inspect package and actual crypto usage", "Inventory only", "A manifest entry is not proof that the dependency uses cryptography."
+    if item.get("asset_type") != "Algorithm":
+        return "Manual review", "Pending", "Scanner diagnostic or non-algorithm indicator; no migration mapping applied."
+    algo = str(item.get("algorithm", "")).upper()
+    purpose = str(item.get("purpose", ""))
+    for (needle, expected_purpose), rec, mode, reason in rules:
+        if needle.upper() in algo and expected_purpose.lower() in purpose.lower():
             return rec, mode, reason
-    if item.get("source") == "Dependency":
-        return "Confirm actual usage first", "Pending", "Dependency found; do not treat as confirmed crypto usage."
-    if not item.get("vulnerable"):
-        return "No change required", "Continue current", "Current algorithm is acceptable under selected guideline."
-    return "Manual review", "Pending", "No exact guideline mapping for this finding."
+    if item.get("vulnerable") is False:
+        return "No PQC migration action inferred", "Review context", "This indicator is not classified as quantum-vulnerable by this scanner."
+    return "Manual review", "Pending", "No safe one-to-one mapping can be inferred from this static indicator."
 
 
 def recommend(items, guideline="nist"):
     rules = CNSA_RULES if guideline == "cnsa" else NIST_RULES
-    out = []
+    output = []
     for item in items:
         rec, mode, reason = match_rule(item, rules)
         row = dict(item)
-        row["recommendation"] = rec
-        row["mode"] = mode
-        row["reason"] = reason
-        out.append(row)
-    return out
+        row.update({"recommendation": rec, "mode": mode, "reason": reason})
+        output.append(row)
+    return output
 
 
 def decide(items):
-    confirmed_vuln = [i for i in items if i.get("vulnerable") and i.get("confidence") in ["Confirmed", "Confirmed via AST", "Confirmed via AST / Multi-Lang"]]
-    suspected = [i for i in items if "Suspected" in str(i.get("confidence"))]
-    pending = [i for i in items if i.get("mode") == "Pending"]
-
+    actionable = [x for x in items if x.get("vulnerable") is True and x.get("asset_type") == "Algorithm"]
+    uncertain = [x for x in items if x.get("vulnerable") is None or x.get("mode") == "Pending"]
     if not items:
-        return "Conditional", "No crypto findings. Confirm scope or add more files."
-    if confirmed_vuln and not suspected and not pending:
-        return "Go", "Confirmed findings have clear guideline recommendations and limited selected-part impact."
-    if suspected or pending:
-        return "Conditional", "Recommendation exists, but suspected findings or unmapped items need review."
-    return "Go", "No vulnerable confirmed findings. Current crypto can continue or is already acceptable."
+        return "Conditional", "No indicators found. This does not prove the codebase is free of cryptography."
+    if actionable or uncertain:
+        return "Review required", "Static indicators were found; validate context and plan migration before making a decision."
+    return "Conditional", "No explicitly vulnerable algorithm indicators were found; static scanning cannot establish cryptographic safety."
 
 
 def impact(items):
-    files = sorted({i["location"].split(":")[0] for i in items if i.get("vulnerable")})
-    
-    # Detailed cryptographic size comparison for change & impact analysis
-    size_comparison = [
-        {"algorithm": "RSA-2048", "pub_key_size": "256 bytes", "sig_size": "256 bytes", "quantum_safe": "No"},
-        {"algorithm": "ECDSA P-256", "pub_key_size": "64 bytes", "sig_size": "64 bytes", "quantum_safe": "No"},
-        {"algorithm": "ML-DSA-65 (PQC)", "pub_key_size": "1,952 bytes", "sig_size": "3,309 bytes", "quantum_safe": "Yes"},
-        {"algorithm": "ML-KEM-768 (KEM)", "pub_key_size": "1,184 bytes", "sig_size": "1,088 bytes (Ciphertext)", "quantum_safe": "Yes"}
-    ]
-
+    files = sorted({x["location"].split(":")[0] for x in items if x.get("vulnerable") is True})
     return {
-        "part_changes": files[:20],
-        "size_metrics": size_comparison,
-        "overall_note": "Enterprise & Dynamic Analysis Note: Static code analysis detects explicit static assets. However, runtime dynamic key loading, environment variables (e.g., .env), and external plugins must undergo manual architectural review to ensure full cryptographic agility.",
+        "part_changes": files[:50],
+        "size_metrics": [
+            {"algorithm": "RSA-2048", "pub_key_size": "256 bytes", "sig_size": "256 bytes", "quantum_safe": "No"},
+            {"algorithm": "ECDSA P-256", "pub_key_size": "64 bytes (uncompressed point varies by encoding)", "sig_size": "typically 64 bytes raw", "quantum_safe": "No"},
+            {"algorithm": "ML-DSA-65", "pub_key_size": "1,952 bytes", "sig_size": "3,309 bytes", "quantum_safe": "Designed to resist known quantum attacks"},
+            {"algorithm": "ML-KEM-768", "pub_key_size": "1,184 bytes", "sig_size": "1,088 bytes ciphertext", "quantum_safe": "Designed to resist known quantum attacks"}
+        ],
+        "overall_note": "Illustrative standardized parameter sizes, not measured application traffic. Static results do not discover runtime-loaded keys, remote services, or all cryptographic operations."
     }
 
 
 def generate_sbom(items, part_name="sample-part"):
-    components = []
-    for item in items:
-        if item.get("source") == "Dependency" or item.get("library") != "-":
-            components.append({
-                "type": "library",
-                "name": item.get("library") or item.get("algorithm"),
-                "version": item.get("key_size", "unknown"),
-                "scope": item.get("purpose"),
-                "vulnerable_to_quantum": item.get("vulnerable", False)
-            })
+    """Return a CycloneDX 1.6 JSON-compatible component inventory.
 
+    Dependency versions are retained only when declared. Source findings are
+    represented as components with evidence properties; they are not asserted
+    to be package identities or proven runtime use.
+    """
+    components = []
+    seen = set()
+    for index, item in enumerate(items, 1):
+        if item.get("asset_type") == "Dependency":
+            name = item.get("library") or item.get("algorithm") or "unknown-dependency"
+            version = item.get("version", "unknown")
+            purl = None
+            key = ("library", name, version)
+            if key in seen:
+                continue
+            seen.add(key)
+            component = {"type": "library", "bom-ref": f"dependency-{index}",
+                         "name": name, "version": version}
+        else:
+            name = item.get("algorithm") or "cryptographic-indicator"
+            key = ("cryptographic-asset", name, item.get("location"))
+            if key in seen:
+                continue
+            seen.add(key)
+            component = {"type": "cryptographic-asset", "bom-ref": f"crypto-{index}",
+                         "name": name}
+        props = [
+            {"name": "sustum:asset_type", "value": str(item.get("asset_type", "Algorithm"))},
+            {"name": "sustum:location", "value": str(item.get("location", ""))},
+            {"name": "sustum:purpose", "value": str(item.get("purpose", ""))},
+            {"name": "sustum:confidence", "value": str(item.get("confidence", ""))},
+            {"name": "sustum:evidence", "value": str(item.get("evidence", item.get("notes", "")))[:500]},
+        ]
+        if item.get("vulnerable") is not None:
+            props.append({"name": "sustum:quantum_vulnerable_indicator", "value": str(bool(item["vulnerable"])).lower()})
+        component["properties"] = props
+        components.append(component)
     return {
-        "bomFormat": "CycloneDX",
-        "specVersion": "1.4",
-        "version": 1,
-        "metadata": {
-            "component": {
-                "type": "application",
-                "name": part_name
-            }
-        },
+        "bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,
+        "metadata": {"component": {"type": "application", "name": part_name}},
         "components": components
     }
