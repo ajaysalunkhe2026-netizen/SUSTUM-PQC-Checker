@@ -35,6 +35,21 @@ class ScannerTests(unittest.TestCase):
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" for x in findings))
 
+    def test_crypto_api_inside_python_wrapper_is_discovered(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "wrapper.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\\n"
+                    "def build_key():\\n"
+                    "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\\n"
+                )
+            findings = scan_directory(root)
+            self.assertTrue(any(
+                x["algorithm"] == "RSA" and x["purpose"] == "Key generation"
+                and x["location"].endswith(":3") for x in findings
+            ))
+
     def test_assigned_python_crypto_function_alias_is_resolved(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "crypto_alias.py")
