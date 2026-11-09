@@ -96,6 +96,13 @@ class ReportAndRecommendationTests(unittest.TestCase):
 
 
 class UploadTests(unittest.TestCase):
+    def test_dashboard_route_is_available(self):
+        client = app.test_client()
+        response = client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"SUSTUM", response.data)
+        self.assertIn(b"Run scan", response.data)
+
     def test_zip_traversal_is_rejected(self):
         with tempfile.TemporaryDirectory() as root:
             data = io.BytesIO()
@@ -123,6 +130,9 @@ class UploadTests(unittest.TestCase):
         payload = response.get_json()
         self.assertIn("report_html", payload)
         self.assertIn("sbom", payload)
+        self.assertIn("recommendations", payload)
+        self.assertIn("vulnerable_indicator_count", payload)
+        self.assertIn("unknown_count", payload)
         self.assertTrue(payload["report_html"].startswith("<!doctype html>"))
         json.dumps(payload["sbom"])
 
