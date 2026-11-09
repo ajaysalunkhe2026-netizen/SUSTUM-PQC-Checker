@@ -138,6 +138,22 @@ class DependencyManifestTests(unittest.TestCase):
         relationships = {x["version"]: x["dependency_relationship"] for x in findings}
         self.assertEqual(relationships, {"1.0.0": "direct", "2.0.0": "transitive"})
 
+    def test_cbom_component_ids_are_stable_and_keep_distinct_dependency_locations(self):
+        first = {
+            "asset_type": "Dependency", "algorithm": "shared", "library": "shared",
+            "version": "1.0.0", "location": "package-lock.json::node_modules/shared",
+            "purpose": "Dependency inventory", "confidence": "Manifest entry",
+            "evidence": "npm lock", "vulnerable": None
+        }
+        nested = dict(first, location="package-lock.json::node_modules/parent/node_modules/shared")
+        bom_a = generate_sbom([first, nested], "sample")
+        bom_b = generate_sbom([nested, first], "sample")
+        self.assertEqual(bom_a, bom_b)
+        self.assertEqual(len(bom_a["components"]), 2)
+        refs = [component["bom-ref"] for component in bom_a["components"]]
+        self.assertEqual(len(set(refs)), 2)
+        self.assertTrue(validate_sbom(bom_a)["valid"])
+
 
 if __name__ == "__main__":
     unittest.main()
