@@ -1,0 +1,165 @@
+{
+  "description": "Source-backed ambiguous/manual-review cases; excluded from binary precision/recall metrics.",
+  "cases": [
+    {
+      "id": "rw-amb-001",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".py",
+      "source": "signature = key.sign(b\"whatever\", padding.PKCS1v15(), hashes.SHA224())",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 270,
+        "line_end": 270,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-002",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".py",
+      "source": "key.public_key().verify(",
+      "provenance": {
+        "repository": "pyca/cryptography",
+        "path": "tests/hazmat/primitives/test_rsa.py",
+        "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
+        "line_start": 271,
+        "line_end": 271,
+        "license": "Apache-2.0 OR BSD-3-Clause"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-003",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".go",
+      "source": "pubKey, ok := pubkey.(*rsa.PublicKey)",
+      "provenance": {
+        "repository": "golang/go",
+        "path": "src/crypto/tls/auth.go",
+        "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
+        "line_start": 58,
+        "line_end": 58,
+        "license": "BSD-3-Clause"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-004",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".js",
+      "source": "const s1 = crypto.createSign(signingHash)",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-sign-verify.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 113,
+        "line_end": 113,
+        "license": "MIT"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-005",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".js",
+      "source": "const verified = crypto.createVerify(signingHash)",
+      "provenance": {
+        "repository": "nodejs/node",
+        "path": "test/parallel/test-crypto-sign-verify.js",
+        "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
+        "line_start": 121,
+        "line_end": 121,
+        "license": "MIT"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-006",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".java",
+      "source": "Signature normalSig = Signature.getInstance(sigName, \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 1001,
+        "line_end": 1001,
+        "license": "MIT"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-007",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".java",
+      "source": "fact = KeyFactory.getInstance(\"RSA\", \"BC\");",
+      "provenance": {
+        "repository": "bcgit/bc-java",
+        "path": "prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java",
+        "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
+        "line_start": 154,
+        "line_end": 154,
+        "license": "MIT"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-008",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".c",
+      "source": "if (EVP_DigestSignInit_ex(mctx, NULL, \"SHA256\", libctx, propq,",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "demos/signature/rsa_pss_hash.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 63,
+        "line_end": 63,
+        "license": "Apache-2.0"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-009",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".c",
+      "source": "if (EVP_DigestVerifyInit_ex(mctx, NULL, \"SHA256\", libctx, propq,",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "demos/signature/rsa_pss_hash.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 142,
+        "line_end": 142,
+        "license": "Apache-2.0"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    },
+    {
+      "id": "rw-amb-010",
+      "label": "ambiguous",
+      "expected": "manual_review",
+      "extension": ".c",
+      "source": "pkey = d2i_PrivateKey_ex(EVP_PKEY_RSA, NULL, &ppriv_key,",
+      "provenance": {
+        "repository": "openssl/openssl",
+        "path": "demos/signature/rsa_pss_hash.c",
+        "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
+        "line_start": 44,
+        "line_end": 44,
+        "license": "Apache-2.0"
+      },
+      "review": "Real source callsite where algorithm, key origin, reachability, or precise crypto purpose cannot be established from this excerpt alone; excluded from binary metrics."
+    }
+  ]
+}
