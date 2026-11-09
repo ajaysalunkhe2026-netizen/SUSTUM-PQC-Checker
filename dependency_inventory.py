@@ -122,7 +122,7 @@ def parse_pipfile_lock(path, rel_path):
     return rows
 
 
-def _npm_rows(entries, rel_path, source_kind, relationship):
+def _npm_rows(entries, rel_path, source_kind, relationship, package_path=None):
     rows = []
     if not isinstance(entries, dict):
         return rows
@@ -133,7 +133,8 @@ def _npm_rows(entries, rel_path, source_kind, relationship):
         dev = bool(item.get("dev", False))
         optional = bool(item.get("optional", False))
         scope = "development" if dev else ("optional" if optional else "runtime")
-        rows.append(_record(name, str(version), rel_path, "npm", source_kind, scope,
+        location = f"{rel_path}::{package_path}" if package_path else rel_path
+        rows.append(_record(name, str(version), location, "npm", source_kind, scope,
                             relationship, "locked" if item.get("version") else "unknown"))
     return rows
 
@@ -162,17 +163,18 @@ def parse_npm_lock(path, rel_path):
             if marker in package_path:
                 name = package_path.rsplit(marker, 1)[-1]
                 relationship = "direct" if package_path == "node_modules/" + name and name in direct_names else "transitive"
-                rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json packages", relationship))
+                rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json packages", relationship, package_path))
         return rows
     # npm lockfile v1 stores a nested dependencies tree.
-    def walk(dependencies, relationship):
+    def walk(dependencies, relationship, parent_path=""):
         if not isinstance(dependencies, dict):
             return
         for name, item in dependencies.items():
             if not isinstance(item, dict):
                 continue
-            rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json dependencies", relationship))
-            walk(item.get("dependencies"), "transitive")
+            package_path = f"{parent_path}/{name}" if parent_path else name
+            rows.extend(_npm_rows({name: item}, rel_path, "package-lock.json dependencies", relationship, package_path))
+            walk(item.get("dependencies"), "transitive", package_path)
     dependencies = data.get("dependencies")
     if not isinstance(dependencies, dict):
         return [_diagnostic(rel_path, "Unsupported npm lockfile structure: expected packages or dependencies object.")]
