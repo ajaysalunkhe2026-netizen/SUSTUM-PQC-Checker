@@ -54,35 +54,35 @@ class ScannerTests(unittest.TestCase):
     def test_java_rsa_api_is_reported(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "Crypto.java"), "w", encoding="utf-8") as handle:
-                handle.write('KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");\\n')
+                handle.write('KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");\n')
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and x["confidence"] == "High-confidence API call" for x in findings))
 
     def test_javascript_rsa_api_is_reported(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "crypto.js"), "w", encoding="utf-8") as handle:
-                handle.write("crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });\\n")
+                handle.write("crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });\n")
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and x["purpose"] == "Key generation" for x in findings))
 
     def test_go_rsa_api_is_reported(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "crypto.go"), "w", encoding="utf-8") as handle:
-                handle.write("key, err := rsa.GenerateKey(rand.Reader, 2048)\\n")
+                handle.write("key, err := rsa.GenerateKey(rand.Reader, 2048)\n")
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and x["confidence"] == "High-confidence API call" for x in findings))
 
     def test_c_openssl_rsa_api_is_reported(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "crypto.c"), "w", encoding="utf-8") as handle:
-                handle.write("RSA_generate_key_ex(rsa, bits, e, cb);\\n")
+                handle.write("RSA_generate_key_ex(rsa, bits, e, cb);\n")
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "RSA" and "OpenSSL API" in x["confidence"] for x in findings))
 
     def test_go_mod_is_inventory_only(self):
         with tempfile.TemporaryDirectory() as root:
             with open(os.path.join(root, "go.mod"), "w", encoding="utf-8") as handle:
-                handle.write("module example.com/demo\\n\\nrequire (\\n github.com/example/crypto v1.2.3\\n)\\n")
+                handle.write("module example.com/demo\n\nrequire (\n github.com/example/crypto v1.2.3\n)\n")
             findings = scan_directory(root)
             self.assertEqual(len(findings), 1)
             self.assertEqual(findings[0]["asset_type"], "Dependency")
