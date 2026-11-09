@@ -105,9 +105,38 @@ class DependencyManifestTests(unittest.TestCase):
         self.assertEqual(properties["sustum:dependency_relationship"], "direct")
         self.assertEqual(properties["sustum:ecosystem"], "pypi")
 
-    def test_malformed_manifest_is_reported_as_no_inventory_not_crash(self):
-        findings = self._scan({"pyproject.toml": "[project\ninvalid"})
-        self.assertEqual(findings, [])
+    def test_malformed_manifest_emits_diagnostic_instead_of_silent_empty_inventory(self):
+        findings = self._scan({"pyproject.toml": "[project\\ninvalid"})
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["asset_type"], "Scanner diagnostic")
+        self.assertIn("Unable to parse TOML", findings[0]["evidence"])
+
+    def test_invalid_npm_lock_root_emits_diagnostic(self):
+        findings = self._scan({"package-lock.json": "[]"})
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["asset_type"], "Scanner diagnostic")
+
+    def test_npm_resolved_url_is_not_misreported_as_version(self):
+        findings = self._scan({"package-lock.json": json.dumps({
+            "lockfileVersion": 3,
+            "packages": {"": {}, "node_modules/example": {
+                "resolved": "https://registry.npmjs.org/example/-/example-1.2.3.tgz"
+            }}
+        })})
+        self.assertEqual(findings[0]["version"], "unspecified")
+        self.assertEqual(findings[0]["version_kind"], "unknown")
+
+    def test_nested_copy_of_direct_npm_package_is_transitive(self):
+        findings = self._scan({"package-lock.json": json.dumps({
+            "lockfileVersion": 3,
+            "packages": {
+                "": {"dependencies": {"shared": "^1.0.0"}},
+                "node_modules/shared": {"version": "1.0.0"},
+                "node_modules/parent/node_modules/shared": {"version": "2.0.0"}
+            }
+        })})
+        relationships = {x["version"]: x["dependency_relationship"] for x in findings}
+        self.assertEqual(relationships, {"1.0.0": "direct", "2.0.0": "transitive"})
 
 
 if __name__ == "__main__":
