@@ -21,6 +21,18 @@ CASES = [
     {"id": "py-assigned-alias", "label": "positive", "file": "alias.py",
      "source": "from cryptography.hazmat.primitives.asymmetric import rsa\nmake_key = rsa.generate_private_key\nkey = make_key(public_exponent=65537, key_size=2048)\n",
      "expected": "RSA"},
+    {"id": "py-wrapper-call", "label": "positive", "file": "wrapper.py",
+     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+               "def build_key():\n"
+               "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+               "key = build_key()\n",
+     "expected": "RSA"},
+    {"id": "py-key-dataflow", "label": "positive", "file": "key_usage.py",
+     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+               "private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+               "signing_key = private_key\n"
+               "signature = signing_key.sign(b'payload', padding, algorithm)\n",
+     "expected": "RSA"},
     {"id": "java-jca-rsa", "label": "positive", "file": "Crypto.java",
      "source": 'KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");\n',
      "expected": "RSA"},
@@ -44,6 +56,10 @@ CASES = [
      "expected": None},
     {"id": "inline-js-comment", "label": "negative", "file": "comment.js",
      "source": "const answer = 42; // RSA-2048 is only a comment\n",
+     "expected": None},
+    {"id": "unrelated-python-sign", "label": "negative", "file": "unrelated.py",
+     "source": "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+               "logger.sign('startup event')\n",
      "expected": None},
     {"id": "contextual-sign", "label": "ambiguous", "file": "sign.js",
      "source": "const signer = createSign('RSA-SHA256');\n",
