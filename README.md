@@ -12,7 +12,8 @@ SUSTUM is an early-stage static-analysis prototype for identifying cryptography-
 - HTML report returned in the API response.
 - JSON inventory export using CycloneDX 1.6 structure and SUSTUM evidence properties.
 - Strict CycloneDX 1.6 JSON validation through the CycloneDX project's Python validator; validation status and errors are returned with each scan.
-- A small, labelled detection regression smoke corpus with case-level TP/FP/FN/TN, precision, recall and F1 output in CI. Ambiguous cases are reported separately and excluded from binary metrics.
+- A small, hand-authored detection regression smoke corpus with case-level TP/FP/FN/TN, precision, recall and F1 output in CI. Ambiguous cases are reported separately and excluded from binary metrics.
+- A separate 9-case source-backed pilot corpus (5 positive, 4 negative) pinned to upstream commits across Python, JavaScript, Go, Java and C. It reports algorithm presence separately from API-callsite and purpose matches; labels are provisional and have not received independent external review.
 
 ## Important limitations
 
@@ -80,9 +81,10 @@ Supported guideline values: nist and cnsa.
 ~~~bash
 python -m unittest discover -s tests -v
 python tests/evaluate_detection.py
+python tests/evaluate_real_world.py
 ~~~
 
-The evaluator uses a hand-authored smoke corpus. Its metrics are regression signals only, not representative accuracy estimates. Expand and independently review the corpus before using any metric externally.
+The first evaluator uses a hand-authored smoke corpus. The second uses a small source-backed pilot with immutable upstream provenance. Both are regression signals only, not representative accuracy estimates. The source-backed pilot is not independently reviewed; expand it to 50–100 cases and obtain a second reviewer before using any metrics externally.
 
 ## Project status
 
