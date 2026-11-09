@@ -40,9 +40,9 @@ class ScannerTests(unittest.TestCase):
             path = os.path.join(root, "wrapper.py")
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(
-                    "from cryptography.hazmat.primitives.asymmetric import rsa\\n"
-                    "def build_key():\\n"
-                    "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\\n"
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                    "def build_key():\n"
+                    "    return rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
                 )
             findings = scan_directory(root)
             self.assertTrue(any(
@@ -55,10 +55,10 @@ class ScannerTests(unittest.TestCase):
             path = os.path.join(root, "crypto_alias.py")
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(
-                    "from cryptography.hazmat.primitives.asymmetric import rsa\\n"
-                    "make_key = rsa.generate_private_key\\n"
-                    "key_factory = make_key\\n"
-                    "key = key_factory(public_exponent=65537, key_size=2048)\\n"
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                    "make_key = rsa.generate_private_key\n"
+                    "key_factory = make_key\n"
+                    "key = key_factory(public_exponent=65537, key_size=2048)\n"
                 )
             findings = scan_directory(root)
             self.assertTrue(any(
@@ -70,7 +70,7 @@ class ScannerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "sign.js")
             with open(path, "w", encoding="utf-8") as handle:
-                handle.write("const signer = createSign('RSA-SHA256');\\n")
+                handle.write("const signer = createSign('RSA-SHA256');\n")
             findings = scan_directory(root)
             self.assertTrue(any(x["algorithm"] == "Signature operation" for x in findings))
             self.assertFalse(any(x["algorithm"] == "RSA" for x in findings))
