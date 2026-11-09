@@ -50,6 +50,16 @@ class ScannerTests(unittest.TestCase):
                 and x["location"].endswith(":3") for x in findings
             ), findings)
 
+    def test_unrelated_sign_method_is_not_assumed_crypto(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "unrelated.py")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(
+                    "from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                    "logger.sign('startup event')\n"
+                )
+            self.assertEqual(scan_directory(root), [])
+
     def test_generated_key_alias_tracks_later_sign_operation(self):
         with tempfile.TemporaryDirectory() as root:
             path = os.path.join(root, "key_usage.py")
