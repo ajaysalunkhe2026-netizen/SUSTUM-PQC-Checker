@@ -43,7 +43,7 @@ CASES = [
      "source": "function greet(name) { return 'hello ' + name; }\n",
      "expected": None},
     {"id": "inline-js-comment", "label": "negative", "file": "comment.js",
-     "source": "const answer = 42; // RSA-2048 is only a comment\\n",
+     "source": "const answer = 42; // RSA-2048 is only a comment\n",
      "expected": None},
     {"id": "contextual-sign", "label": "ambiguous", "file": "sign.js",
      "source": "const signer = createSign('RSA-SHA256');\n",
