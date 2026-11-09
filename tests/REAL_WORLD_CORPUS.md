@@ -48,3 +48,20 @@ Projects and source files used:
 A positive label requires source context showing a cryptographic API/algorithm operation, not merely a comment or a dependency name. A negative label requires source context with no crypto operation in the selected excerpt. Ambiguous examples should be separately labelled and excluded from binary metrics.
 
 Before calling the corpus independently reviewed, a second reviewer should verify every label against the pinned source and record reviewer identity/date and any disagreement. Cases with uncertain labels remain provisional or ambiguous; do not force them into positive/negative classes.
+
+## Initial baseline (feature branch, 2026-11-09)
+
+The first CI evaluation of the 9 source-backed pilot cases completed successfully as a diagnostic run:
+
+- Case-level: TP=4, FP=0, FN=1, TN=4; precision=1.00, recall=0.80, F1=0.89.
+- Expected API callsite matched in 3 of 5 positive cases.
+- Expected purpose matched in 2 of 5 positive cases.
+
+Observed gaps:
+
+- **Node.js destructured import:** the upstream test imports `generateKeyPairSync` by destructuring from `crypto` and calls it directly. The current scanner missed this RSA key-generation call.
+- **Go dot import:** the algorithm was detected from the `crypto/rsa` import, but not at the actual `GenerateKey` callsite. This is an algorithm-presence match, not successful operation-level discovery.
+- **OpenSSL provider API:** RSA was detected at the provider callsite, but the purpose remained a generic algorithm reference rather than key generation.
+
+These results are a useful initial failure analysis, not a claim about general scanner accuracy. The Node.js miss is a confirmed false negative within this pilot. The Go and OpenSSL cases demonstrate why algorithm-only metrics can overstate operation and purpose coverage.
+
