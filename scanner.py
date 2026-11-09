@@ -136,6 +136,21 @@ class CryptoASTVisitor(ast.NodeVisitor):
             parts = name.split(".")
         return name
 
+    def _visit_scoped_node(self, node):
+        # Keep local aliases from leaking into sibling functions/classes.
+        previous = self.aliases.copy()
+        self.generic_visit(node)
+        self.aliases = previous
+
+    def visit_FunctionDef(self, node):
+        self._visit_scoped_node(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        self._visit_scoped_node(node)
+
+    def visit_ClassDef(self, node):
+        self._visit_scoped_node(node)
+
     def visit_Assign(self, node):
         # Track simple aliases such as make_key = rsa.generate_private_key.
         if isinstance(node.value, (ast.Name, ast.Attribute)):
