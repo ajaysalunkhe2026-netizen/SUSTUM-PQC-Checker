@@ -190,12 +190,33 @@ class CryptoASTVisitor(ast.NodeVisitor):
 
 
 def _strip_line_comment(line, ext):
-    """Remove obvious full-line comments without damaging string literals."""
-    stripped = line.lstrip()
-    if ext in {".py", ".yaml", ".yml", ".sh"} and stripped.startswith("#"):
-        return ""
-    if ext not in {".py", ".yaml", ".yml", ".sh"} and stripped.startswith(("//", "/*", "*", "*/")):
-        return ""
+    """Remove single-line comments while preserving comment markers in strings."""
+    if ext == ".py":
+        return line  # Python comments and strings are handled by tokenize masking.
+    quote = None
+    escaped = False
+    i = 0
+    while i < len(line):
+        char = line[i]
+        if quote:
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            i += 1
+            continue
+        if char in ("\\'", '"', "`"):
+            quote = char
+            i += 1
+            continue
+        if ext in {".yaml", ".yml", ".env", ".properties", ".sh"} and char == "#":
+            return line[:i]
+        if ext not in {".yaml", ".yml", ".env", ".properties", ".sh"}:
+            if line.startswith("//", i) or line.startswith("/*", i):
+                return line[:i]
+        i += 1
     return line
 
 
