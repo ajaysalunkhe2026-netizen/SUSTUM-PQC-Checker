@@ -254,16 +254,43 @@ class CryptoASTVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def _strip_line_comment(line, ext):
-    """Remove single-line comments while preserving comment markers in strings."""
+def _strip_source_comments(content, ext):
+    """Mask comments while preserving strings and line numbers.
+
+    Handles // and multi-line /* */ comments in C-like languages, and # comments
+    in common config/shell files. Python comments are handled by tokenize.
+    """
     if ext == ".py":
-        return line  # Python comments and strings are handled by tokenize masking.
+        return content
+    hash_comments = ext in {".yaml", ".yml", ".env", ".properties", ".sh"}
+    output = []
     quote = None
     escaped = False
+    in_block = False
+    in_line = False
     i = 0
-    while i < len(line):
-        char = line[i]
+    while i < len(content):
+        char = content[i]
+        nxt = content[i + 1] if i + 1 < len(content) else ""
+        if in_line:
+            if char == "\\n":
+                in_line = False
+                output.append(char)
+            else:
+                output.append(" ")
+            i += 1
+            continue
+        if in_block:
+            if char == "*" and nxt == "/":
+                output.extend((" ", " "))
+                in_block = False
+                i += 2
+            else:
+                output.append("\\n" if char == "\\n" else " ")
+                i += 1
+            continue
         if quote:
+            output.append(char)
             if escaped:
                 escaped = False
             elif ord(char) == 92:
@@ -274,21 +301,35 @@ def _strip_line_comment(line, ext):
             continue
         if char in (chr(39), chr(34), chr(96)):
             quote = char
+            output.append(char)
             i += 1
             continue
-        if ext in {".yaml", ".yml", ".env", ".properties", ".sh"} and char == "#":
-            return line[:i]
-        if ext not in {".yaml", ".yml", ".env", ".properties", ".sh"}:
-            if line.startswith("//", i) or line.startswith("/*", i):
-                return line[:i]
+        if hash_comments and char == "#":
+            in_line = True
+            output.append(" ")
+            i += 1
+            continue
+        if not hash_comments and char == "/" and nxt == "/":
+            in_line = True
+            output.extend((" ", " "))
+            i += 2
+            continue
+        if not hash_comments and char == "/" and nxt == "*":
+            in_block = True
+            output.extend((" ", " "))
+            i += 2
+            continue
+        output.append(char)
         i += 1
-    return line
+    return "".join(output)
+
 
 def _scan_language_lines(content, rel_path, ext):
     findings = []
     patterns = LANGUAGE_PATTERNS.get(ext, [])
-    for line_no, raw_line in enumerate(content.splitlines(), 1):
-        line = _strip_line_comment(raw_line, ext)
+    clean_content = _strip_source_comments(content, ext)
+    for line_no, raw_line in enumerate(clean_content.splitlines(), 1):
+        line = raw_line
         if not line.strip():
             continue
         for pattern, algorithm, purpose, vulnerable, confidence in patterns:
@@ -343,9 +384,10 @@ def scan_file(filepath, relative_path=None):
                 "Scanner limitation", "Parse error", str(exc), None, asset_type="Scanner diagnostic"))
 
     findings.extend(_scan_language_lines(content, rel_path, ext))
-    text_content = _mask_python_strings_and_comments(content) if ext == '.py' else content
+    comment_free = _strip_source_comments(content, ext)
+    text_content = _mask_python_strings_and_comments(comment_free) if ext == '.py' else comment_free
     for line_no, raw_line in enumerate(text_content.splitlines(), 1):
-        line = _strip_line_comment(raw_line, ext)
+        line = raw_line
         if not line.strip():
             continue
         if ext == ".py" and re.match(r"^\s*(?:from\s+\S+\s+import\b|import\b)", line):
