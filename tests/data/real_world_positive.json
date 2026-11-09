@@ -1,5 +1,5 @@
 {
-  "description": "Source-backed positive API-use cases. Short excerpts are retained with immutable upstream commit/path/line provenance; Python imports are included as context and callsite indentation is normalized.",
+  "description": "Source-backed positive API-use cases, pinned to immutable upstream commits and line references. Python imports are included as context and callsite indentation is normalized.",
   "cases": [
     {
       "id": "rw-pos-001",
@@ -13,7 +13,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 184,
         "line_end": 184,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L184-L184"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -29,7 +30,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 193,
         "line_end": 193,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L193-L193"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -45,7 +47,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 196,
         "line_end": 196,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L196-L196"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -61,7 +64,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 199,
         "line_end": 199,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L199-L199"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -77,7 +81,8 @@
         "commit": "c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54",
         "line_start": 203,
         "line_end": 203,
-        "license": "Apache-2.0 OR BSD-3-Clause"
+        "license": "Apache-2.0 OR BSD-3-Clause",
+        "url": "https://github.com/pyca/cryptography/blob/c48cd9aed30d3e3a5352e8651b8ecf604bdd4f54/tests/hazmat/primitives/test_rsa.py#L203-L203"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -93,7 +98,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 62,
         "line_end": 62,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/tls/auth.go#L62-L62"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -109,7 +115,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 71,
         "line_end": 71,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/tls/auth.go#L71-L71"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -125,7 +132,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 97,
         "line_end": 97,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/tls/auth.go#L97-L97"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -141,7 +149,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 1115,
         "line_end": 1115,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/x509/x509.go#L1115-L1115"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -157,7 +166,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 1117,
         "line_end": 1117,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/x509/x509.go#L1117-L1117"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -173,7 +183,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 3279,
         "line_end": 3279,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/x509/x509_test.go#L3279-L3279"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -189,7 +200,8 @@
         "commit": "be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2",
         "line_start": 4521,
         "line_end": 4521,
-        "license": "BSD-3-Clause"
+        "license": "BSD-3-Clause",
+        "url": "https://github.com/golang/go/blob/be57ebb0f3c3ec056ccf39107a5d1380a51ff1c2/src/crypto/x509/x509_test.go#L4521-L4521"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -205,7 +217,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 111,
         "line_end": 111,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L111-L111"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -221,7 +234,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 128,
         "line_end": 128,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L128-L128"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -237,7 +251,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 148,
         "line_end": 148,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L148-L148"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -253,7 +268,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 168,
         "line_end": 168,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L168-L168"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -269,7 +285,8 @@
         "commit": "768315cf7165e9ff9b636844b776488e9d1703fc",
         "line_start": 185,
         "line_end": 185,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/nodejs/node/blob/768315cf7165e9ff9b636844b776488e9d1703fc/test/parallel/test-crypto-keygen.js#L185-L185"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -285,7 +302,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 202,
         "line_end": 202,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L202-L202"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -301,7 +319,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 225,
         "line_end": 225,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L225-L225"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -317,7 +336,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 275,
         "line_end": 275,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L275-L275"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -333,7 +353,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 613,
         "line_end": 613,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L613-L613"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -349,7 +370,8 @@
         "commit": "a1bb4ad079be399a96a219c18f7c87ceefb7268f",
         "line_start": 888,
         "line_end": 888,
-        "license": "MIT"
+        "license": "MIT",
+        "url": "https://github.com/bcgit/bc-java/blob/a1bb4ad079be399a96a219c18f7c87ceefb7268f/prov/src/test/java/org/bouncycastle/jce/provider/test/RSATest.java#L888-L888"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -365,7 +387,8 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 539,
         "line_end": 539,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/test/rsa_test.c#L539-L539"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     },
@@ -381,7 +404,8 @@
         "commit": "dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc",
         "line_start": 545,
         "line_end": 545,
-        "license": "Apache-2.0"
+        "license": "Apache-2.0",
+        "url": "https://github.com/openssl/openssl/blob/dffc5e3a5e65fe3fe9e8a610fbb4b8aff9332fdc/test/rsa_test.c#L545-L545"
       },
       "review": "Source-backed API callsite; expected API-use indicator."
     }
