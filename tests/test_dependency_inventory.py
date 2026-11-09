@@ -60,7 +60,9 @@ class DependencyManifestTests(unittest.TestCase):
             })
         })
         self.assertEqual({x["library"] for x in findings}, {"left-pad", "child"})
-        self.assertTrue(all(x["version_kind"] == "locked" for x in findings))\n        self.assertEqual(next(x for x in findings if x["library"] == "left-pad")["dependency_relationship"], "direct")\n        self.assertEqual(next(x for x in findings if x["library"] == "child")["dependency_relationship"], "transitive")
+        self.assertTrue(all(x["version_kind"] == "locked" for x in findings))
+        self.assertEqual(next(x for x in findings if x["library"] == "left-pad")["dependency_relationship"], "direct")
+        self.assertEqual(next(x for x in findings if x["library"] == "child")["dependency_relationship"], "transitive")
 
     def test_npm_lock_v1_recurses_nested_dependencies(self):
         findings = self._scan({
