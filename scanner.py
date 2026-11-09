@@ -5,9 +5,11 @@ This is heuristic static analysis, not runtime discovery or proof of reachabilit
 Every result should be reviewed against the actual application and build context.
 """
 import ast
+import io
 import json
 import os
 import re
+import tokenize
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "venv", ".venv", "dist", "build", "target"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh", ".json", ".yaml", ".yml", ".env", ".properties"}
@@ -180,6 +182,25 @@ def _scan_language_lines(content, rel_path, ext):
     return findings
 
 
+def _mask_python_strings_and_comments(content):
+    lines = content.splitlines(keepends=True)
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(content).readline):
+            if token.type not in (tokenize.STRING, tokenize.COMMENT):
+                continue
+            (sr, sc), (er, ec) = token.start, token.end
+            for row in range(sr - 1, er):
+                chars = list(lines[row])
+                left = sc if row == sr - 1 else 0
+                right = ec if row == er - 1 else len(chars)
+                for col in range(left, min(right, len(chars))):
+                    if chars[col] != chr(10) and chars[col] != chr(13):
+                        chars[col] = ' '
+                lines[row] = ''.join(chars)
+    except (tokenize.TokenError, IndentationError):
+        return '\n'.join('' for _ in content.splitlines())
+    return ''.join(lines)
+
 def scan_file(filepath, relative_path=None):
     findings = []
     rel_path = relative_path or os.path.basename(filepath)
@@ -200,7 +221,8 @@ def scan_file(filepath, relative_path=None):
                 "Scanner limitation", "Parse error", str(exc), None, asset_type="Scanner diagnostic"))
 
     findings.extend(_scan_language_lines(content, rel_path, ext))
-    for line_no, raw_line in enumerate(content.splitlines(), 1):
+    text_content = _mask_python_strings_and_comments(content) if ext == '.py' else content
+    for line_no, raw_line in enumerate(text_content.splitlines(), 1):
         line = _strip_line_comment(raw_line, ext)
         if not line.strip():
             continue
