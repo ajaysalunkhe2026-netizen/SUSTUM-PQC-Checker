@@ -334,19 +334,19 @@ def _scan_language_lines(content, rel_path, ext):
     if ext in {".js", ".ts"}:
         for source_line in source_lines:
             match = re.search(
-                r'\\b(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:require\\(\\s*["\\']crypto["\\']\\s*\\)|crypto)\\s*;?',
+                r"""\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:require\(\s*["']crypto["']\s*\)|crypto)\s*;?""",
                 source_line)
             if match:
                 aliases[match.group(1)] = "crypto"
             match = re.search(
-                r'import\\s+\\*\\s+as\\s+([A-Za-z_$][\\w$]*)\\s+from\\s+["\\']crypto["\\']',
+                r"""import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s+["']crypto["']""",
                 source_line)
             if match:
                 aliases[match.group(1)] = "crypto"
     elif ext == ".go":
         for source_line in source_lines:
             match = re.search(
-                r'\\b(?:(\\w+)\\s+)?["\\']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["\\']',
+                r"""\b(?:(\w+)\s+)?["']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["']""",
                 source_line)
             if match:
                 aliases[match.group(1) or match.group(2)] = match.group(2)
