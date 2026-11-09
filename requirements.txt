@@ -2,3 +2,4 @@ Flask==3.0.0
 flask-cors==4.0.0
 requests==2.31.0
 cyclonedx-python-lib[validation]==11.5.0
+tomli==2.2.1; python_version < "3.11"
