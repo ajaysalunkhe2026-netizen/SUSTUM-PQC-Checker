@@ -1,7 +1,9 @@
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
+import scanner
 from scanner import scan_file
 
 
@@ -42,6 +44,30 @@ class PQCAlgorithmClassificationTests(unittest.TestCase):
         self.assertFalse(any(x["asset_type"] == "Scanner diagnostic" and
                              x["algorithm"] == "Python parse error" for x in findings))
         self.assertTrue(any(x["algorithm"] == "RSA" for x in findings))
+
+
+    def test_overlapping_detector_cannot_relabel_pqc_evidence_as_dsa(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = os.path.join(root, "algorithms.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("{}")
+            false_overlap = scanner._finding(
+                "algorithms.json:1", "DSA", "Signature",
+                "Textual indicator", '"ML-DSA-65"', True
+            )
+            with patch("scanner._scan_language_lines", return_value=[false_overlap]):
+                findings = scan_file(path, "algorithms.json")
+        self.assertFalse(any(x["algorithm"] == "DSA" for x in findings))
+
+    def test_repeated_utf8_bom_prefix_is_removed_before_python_parse(self):
+        source = (
+            b"\xef\xbb\xbf\xef\xbb\xbf"
+            b"from cryptography.hazmat.primitives.asymmetric import rsa\n"
+            b"key = rsa.generate_private_key(public_exponent=65537, key_size=2048)\n"
+        )
+        findings = self._scan("double_bom_source.py", source, binary=True)
+        self.assertFalse(any(x["asset_type"] == "Scanner diagnostic" and
+                             x["algorithm"] == "Python parse error" for x in findings))
 
 
 if __name__ == "__main__":
