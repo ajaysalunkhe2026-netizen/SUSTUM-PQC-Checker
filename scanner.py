@@ -17,42 +17,42 @@ DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "Pipfile", "package.js
 # Each tuple: regex, algorithm, purpose, quantum-vulnerable indicator, confidence.
 LANGUAGE_PATTERNS = {
     ".java": [
-        (r'KeyPairGenerator\\s*\\.getInstance\\s*\\(\\s*["\']RSA["\']', "RSA", "Key generation", True, "High-confidence API call"),
-        (r'Signature\\s*\\.getInstance\\s*\\(\\s*["\'][^"\']*RSA', "RSA", "Signature", True, "High-confidence API call"),
-        (r'Cipher\\s*\\.getInstance\\s*\\(\\s*["\'][^"\']*RSA', "RSA", "Encryption / key transport", True, "High-confidence API call"),
-        (r'KeyAgreement\\s*\\.getInstance\\s*\\(\\s*["\']ECDH["\']', "ECDH", "Key establishment", True, "High-confidence API call"),
-        (r'Signature\\s*\\.getInstance\\s*\\(\\s*["\'][^"\']*ECDSA', "ECDSA", "Signature", True, "High-confidence API call"),
-        (r'MessageDigest\\s*\\.getInstance\\s*\\(\\s*["\']SHA-?1["\']', "SHA-1", "Hash", False, "High-confidence API call"),
-        (r'MessageDigest\\s*\\.getInstance\\s*\\(\\s*["\']SHA-?256["\']', "SHA-256", "Hash", False, "High-confidence API call"),
+        (r'KeyPairGenerator\s*\.getInstance\s*\(\s*["\']RSA["\']', "RSA", "Key generation", True, "High-confidence API call"),
+        (r'Signature\s*\.getInstance\s*\(\s*["\'][^"\']*RSA', "RSA", "Signature", True, "High-confidence API call"),
+        (r'Cipher\s*\.getInstance\s*\(\s*["\'][^"\']*RSA', "RSA", "Encryption / key transport", True, "High-confidence API call"),
+        (r'KeyAgreement\s*\.getInstance\s*\(\s*["\']ECDH["\']', "ECDH", "Key establishment", True, "High-confidence API call"),
+        (r'Signature\s*\.getInstance\s*\(\s*["\'][^"\']*ECDSA', "ECDSA", "Signature", True, "High-confidence API call"),
+        (r'MessageDigest\s*\.getInstance\s*\(\s*["\']SHA-?1["\']', "SHA-1", "Hash", False, "High-confidence API call"),
+        (r'MessageDigest\s*\.getInstance\s*\(\s*["\']SHA-?256["\']', "SHA-256", "Hash", False, "High-confidence API call"),
     ],
     ".js": [
-        (r'generateKeyPair(?:Sync)?\\s*\\(\\s*["\']rsa["\']', "RSA", "Key generation", True, "High-confidence API call"),
-        (r'createSign\\s*\\(', "Signature operation", "Signature", None, "Contextual API call"),
-        (r'createVerify\\s*\\(', "Signature operation", "Signature verification", None, "Contextual API call"),
-        (r'createECDH\\s*\\(', "ECDH", "Key establishment", True, "High-confidence API call"),
-        (r'generateKey\\s*\\(\\s*\\{\\s*name\\s*:\\s*["\']RSA', "RSA", "Key generation", True, "High-confidence WebCrypto API"),
-        (r'generateKey\\s*\\(\\s*\\{\\s*name\\s*:\\s*["\']ECDSA', "ECDSA", "Key generation / signature", True, "High-confidence WebCrypto API"),
-        (r'generateKey\\s*\\(\\s*\\{\\s*name\\s*:\\s*["\']ECDH', "ECDH", "Key establishment", True, "High-confidence WebCrypto API"),
+        (r'generateKeyPair(?:Sync)?\s*\(\s*["\']rsa["\']', "RSA", "Key generation", True, "High-confidence API call"),
+        (r'createSign\s*\(', "Signature operation", "Signature", None, "Contextual API call"),
+        (r'createVerify\s*\(', "Signature operation", "Signature verification", None, "Contextual API call"),
+        (r'createECDH\s*\(', "ECDH", "Key establishment", True, "High-confidence API call"),
+        (r'generateKey\s*\(\s*\{\s*name\s*:\s*["\']RSA', "RSA", "Key generation", True, "High-confidence WebCrypto API"),
+        (r'generateKey\s*\(\s*\{\s*name\s*:\s*["\']ECDSA', "ECDSA", "Key generation / signature", True, "High-confidence WebCrypto API"),
+        (r'generateKey\s*\(\s*\{\s*name\s*:\s*["\']ECDH', "ECDH", "Key establishment", True, "High-confidence WebCrypto API"),
     ],
     ".ts": [],
     ".go": [
-        (r'\\brsa\\s*\\.\\s*GenerateKey\\s*\\(', "RSA", "Key generation", True, "High-confidence API call"),
-        (r'\\brsa\\s*\\.\\s*(?:SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\\s*\\(', "RSA", "Signature", True, "High-confidence API call"),
-        (r'\\becdsa\\s*\\.\\s*GenerateKey\\s*\\(', "ECDSA", "Key generation / signature", True, "High-confidence API call"),
-        (r'\\becdh\\s*\\.\\s*X(?:25519|448)\\s*\\(', "ECDH", "Key establishment", True, "High-confidence API call"),
-        (r'\\belliptic\\s*\\.\\s*P(?:224|256|384|521)\\s*\\(', "Elliptic-curve parameter", "Key establishment / signature", True, "High-confidence API call"),
-        (r'\\bsha1\\s*\\.\\s*New\\s*\\(', "SHA-1", "Hash", False, "High-confidence API call"),
-        (r'\\bsha256\\s*\\.\\s*New\\s*\\(', "SHA-256", "Hash", False, "High-confidence API call"),
+        (r'\brsa\s*\.\s*GenerateKey\s*\(', "RSA", "Key generation", True, "High-confidence API call"),
+        (r'\brsa\s*\.\s*(?:SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(', "RSA", "Signature", True, "High-confidence API call"),
+        (r'\becdsa\s*\.\s*GenerateKey\s*\(', "ECDSA", "Key generation / signature", True, "High-confidence API call"),
+        (r'\becdh\s*\.\s*X(?:25519|448)\s*\(', "ECDH", "Key establishment", True, "High-confidence API call"),
+        (r'\belliptic\s*\.\s*P(?:224|256|384|521)\s*\(', "Elliptic-curve parameter", "Key establishment / signature", True, "High-confidence API call"),
+        (r'\bsha1\s*\.\s*New\s*\(', "SHA-1", "Hash", False, "High-confidence API call"),
+        (r'\bsha256\s*\.\s*New\s*\(', "SHA-256", "Hash", False, "High-confidence API call"),
     ],
     ".c": [
-        (r'\\bRSA_generate_key_ex\\s*\\(', "RSA", "Key generation", True, "High-confidence OpenSSL API"),
-        (r'\\bEVP_PKEY_RSA\\b', "RSA", "Asymmetric key algorithm reference", True, "OpenSSL algorithm reference"),
-        (r'\\bEVP_PKEY_EC\\b|\\bEC_KEY_new_by_curve_name\\s*\\(', "Elliptic Curve", "Key generation / signature", True, "High-confidence OpenSSL API"),
-        (r'\\bEVP_PKEY_X25519\\b', "ECDH", "Key establishment", True, "OpenSSL algorithm reference"),
-        (r'\\bEVP_DigestSignInit\\s*\\(', "Signature operation", "Signature", None, "OpenSSL API; algorithm depends on key"),
-        (r'\\bEVP_DigestVerifyInit\\s*\\(', "Signature operation", "Signature verification", None, "OpenSSL API; algorithm depends on key"),
-        (r'\\bEVP_sha1\\s*\\(', "SHA-1", "Hash", False, "High-confidence OpenSSL API"),
-        (r'\\bEVP_sha256\\s*\\(', "SHA-256", "Hash", False, "High-confidence OpenSSL API"),
+        (r'\bRSA_generate_key_ex\s*\(', "RSA", "Key generation", True, "High-confidence OpenSSL API"),
+        (r'\bEVP_PKEY_RSA\b', "RSA", "Asymmetric key algorithm reference", True, "OpenSSL algorithm reference"),
+        (r'\bEVP_PKEY_EC\b|\bEC_KEY_new_by_curve_name\s*\(', "Elliptic Curve", "Key generation / signature", True, "High-confidence OpenSSL API"),
+        (r'\bEVP_PKEY_X25519\b', "ECDH", "Key establishment", True, "OpenSSL algorithm reference"),
+        (r'\bEVP_DigestSignInit\s*\(', "Signature operation", "Signature", None, "OpenSSL API; algorithm depends on key"),
+        (r'\bEVP_DigestVerifyInit\s*\(', "Signature operation", "Signature verification", None, "OpenSSL API; algorithm depends on key"),
+        (r'\bEVP_sha1\s*\(', "SHA-1", "Hash", False, "High-confidence OpenSSL API"),
+        (r'\bEVP_sha256\s*\(', "SHA-256", "Hash", False, "High-confidence OpenSSL API"),
     ],
     ".cpp": [],
     ".cc": [],
@@ -66,14 +66,14 @@ for _ext in (".cpp", ".cc", ".cxx", ".h", ".hpp", ".hh"):
     LANGUAGE_PATTERNS[_ext] = LANGUAGE_PATTERNS[".c"]
 
 TEXT_PATTERNS = [
-    (re.compile(r"\\bRSA(?:[-_ ]?(?:1024|2048|3072|4096))?\\b", re.I), "RSA", "Algorithm reference", True),
-    (re.compile(r"\\bECDSA\\b", re.I), "ECDSA", "Signature", True),
-    (re.compile(r"\\bECDH\\b", re.I), "ECDH", "Key establishment", True),
-    (re.compile(r"\\b(?:secp256r1|prime256v1|P-256|P-384)\\b", re.I), "Elliptic-curve parameter", "Key establishment / signature", True),
-    (re.compile(r"\\bDSA\\b", re.I), "DSA", "Signature", True),
-    (re.compile(r"\\bSHA-?1\\b", re.I), "SHA-1", "Hash", False),
-    (re.compile(r"\\bTLS[-_ ]?1[.]2\\b", re.I), "TLS 1.2", "Protocol configuration", False),
-    (re.compile(r"\\b(?:ML-KEM|ML-DSA|SLH-DSA|Kyber|Dilithium)\\b", re.I), "PQC algorithm reference", "PQC reference", False),
+    (re.compile(r"\bRSA(?:[-_ ]?(?:1024|2048|3072|4096))?\b", re.I), "RSA", "Algorithm reference", True),
+    (re.compile(r"\bECDSA\b", re.I), "ECDSA", "Signature", True),
+    (re.compile(r"\bECDH\b", re.I), "ECDH", "Key establishment", True),
+    (re.compile(r"\b(?:secp256r1|prime256v1|P-256|P-384)\b", re.I), "Elliptic-curve parameter", "Key establishment / signature", True),
+    (re.compile(r"\bDSA\b", re.I), "DSA", "Signature", True),
+    (re.compile(r"\bSHA-?1\b", re.I), "SHA-1", "Hash", False),
+    (re.compile(r"\bTLS[-_ ]?1[.]2\b", re.I), "TLS 1.2", "Protocol configuration", False),
+    (re.compile(r"\b(?:ML-KEM|ML-DSA|SLH-DSA|Kyber|Dilithium)\b", re.I), "PQC algorithm reference", "PQC reference", False),
 ]
 PY_CALLS = {
     "generate_private_key": "Potential asymmetric key generation",
@@ -173,7 +173,7 @@ def _scan_language_lines(content, rel_path, ext):
                 findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose,
                     confidence, match.group(0)[:240], vulnerable))
         # Detect standard PQC identifiers in source/config even when wrapped by a provider.
-        pqc = re.search(r"\\b(ML-KEM(?:-512|-768|-1024)?|ML-DSA(?:-44|-65|-87)?|SLH-DSA(?:-[A-Z0-9-]+)?)\\b", line, re.I)
+        pqc = re.search(r"\b(ML-KEM(?:-512|-768|-1024)?|ML-DSA(?:-44|-65|-87)?|SLH-DSA(?:-[A-Z0-9-]+)?)\b", line, re.I)
         if pqc:
             findings.append(_finding(f"{rel_path}:{line_no}", "PQC algorithm reference",
                 "PQC reference", "Textual indicator", pqc.group(0), False))
@@ -244,7 +244,7 @@ def parse_requirements_txt(filepath, rel_path):
                 line = raw.split("#", 1)[0].strip()
                 if not line or line.startswith(("-e ", "--")):
                     continue
-                match = re.match(r"([A-Za-z0-9_.-]+)\\s*(?:\\[[^]]+\\])?\\s*(.*)", line)
+                match = re.match(r"([A-Za-z0-9_.-]+)\s*(?:\[[^]]+\])?\s*(.*)", line)
                 if match:
                     rows.append(_dependency(match.group(1), match.group(2).strip() or "unspecified",
                         f"{rel_path}:{line_no}"))
