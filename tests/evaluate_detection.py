@@ -67,6 +67,21 @@ CASES = [
     {"id": "string-mention", "label": "negative", "file": "logging.py",
      "source": "message = 'RSA is mentioned in this diagnostic string'\n",
      "expected": None},
+    {"id": "js-block-comment", "label": "negative", "file": "comment.js",
+     "source": "/*\\ncrypto.generateKeyPairSync('rsa');\\n*/\\nconst ok = true;\\n",
+     "expected": None},
+    {"id": "java-block-comment", "label": "negative", "file": "comment.java",
+     "source": "/* KeyPairGenerator.getInstance('RSA');\\ncontinued */\\nclass Plain {}\\n",
+     "expected": None},
+    {"id": "go-block-comment", "label": "negative", "file": "comment.go",
+     "source": "/* rsa.GenerateKey(rand.Reader, 2048)\\ncontinued */\\npackage main\\n",
+     "expected": None},
+    {"id": "c-block-comment", "label": "negative", "file": "comment.c",
+     "source": "/* RSA_generate_key_ex(rsa, bits, e, cb);\\ncontinued */\\nint main(void) { return 0; }\\n",
+     "expected": None},
+    {"id": "js-after-block-comment", "label": "positive", "file": "after_comment.js",
+     "source": "/* unrelated\\ncomment */\\ncrypto.generateKeyPairSync('rsa', {});\\n",
+     "expected": "RSA"},
 ]
 
 
