@@ -13,7 +13,7 @@ SUSTUM is an early-stage static-analysis prototype for identifying cryptography-
 - JSON inventory export using CycloneDX 1.6 structure and SUSTUM evidence properties.
 - Strict CycloneDX 1.6 JSON validation through the CycloneDX project's Python validator; validation status and errors are returned with each scan.
 - A small, hand-authored detection regression smoke corpus with case-level TP/FP/FN/TN, precision, recall and F1 output in CI. Ambiguous cases are reported separately and excluded from binary metrics.
-- A separate 9-case source-backed pilot corpus (5 positive, 4 negative) pinned to upstream commits across Python, JavaScript, Go, Java and C. It reports algorithm presence separately from API-callsite and purpose matches; labels are provisional and have not received independent external review.
+- A 61-case source-backed benchmark (29 positive API-use cases, 22 negative controls, 10 ambiguous) pinned to upstream commits across five repositories. Labels are provisional and have not received independent second-reviewer sign-off.
 
 ## Important limitations
 
@@ -84,13 +84,13 @@ python tests/evaluate_detection.py
 python tests/evaluate_real_world.py
 ~~~
 
-The first evaluator uses a hand-authored smoke corpus. The second evaluates 61 curated source-backed cases across five upstream repositories (29 positive, 22 negative, 10 ambiguous) with immutable commit and line provenance. Latest pilot result: TP=27, FP=0, FN=2, TN=22 (precision 1.00, recall 0.931, F1 0.964). These are curated excerpt-level regression metrics, not representative production accuracy. Labels have not received independent second-reviewer sign-off. See [P1.1 benchmark report](P1_1_REAL_WORLD_BENCHMARK.md) for methodology, missed cases and limitations.
+The first evaluator uses a hand-authored smoke corpus. The second evaluates 61 curated source-backed cases across five upstream repositories (29 positive, 22 negative, 10 ambiguous) with immutable commit and line provenance. Previously measured baseline: TP=27, FP=0, FN=2, TN=22 (precision 1.00, recall 0.931, F1 0.964); rerun on the exact handoff commit before external review. These are curated excerpt-level regression metrics, not representative production accuracy. Labels have not received independent second-reviewer sign-off. See [P1.1 benchmark report](P1_1_REAL_WORLD_BENCHMARK.md) for methodology, missed cases and limitations.
 
 ## Project status
 
 The current branch is a development branch. Passing local tests will demonstrate only that the included test cases pass; it will not establish detection accuracy, schema compliance, production readiness, or enterprise suitability.
 
-## Industry-grade CBOM engineering status\n\nAn architecture audit and phased delivery/acceptance plan is recorded in [INDUSTRY_GRADE_ROADMAP.md](INDUSTRY_GRADE_ROADMAP.md). Initial dependency-inventory support is being expanded; this is not yet a complete dependency resolver or an industry-validated CBOM product.\n\n## Next engineering milestones
+## Industry-grade CBOM engineering status\n\nAn architecture audit and phased delivery/acceptance plan is recorded in [INDUSTRY_GRADE_ROADMAP.md](INDUSTRY_GRADE_ROADMAP.md). A reviewer protocol and reproduction guide is in [INDEPENDENT_VALIDATION_HANDOFF.md](INDEPENDENT_VALIDATION_HANDOFF.md). This is a pre-release validation candidate, not a complete dependency resolver or an industry-validated CBOM product.\n\n## Next engineering milestones
 
 1. Obtain independent second-reviewer sign-off for the 61 source-backed cases and expand toward 100+ cases, including non-test application code.
 2. Add parser-backed analysis, interprocedural alias/wrapper resolution and bounded data-flow analysis.
