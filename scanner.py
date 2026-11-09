@@ -112,6 +112,7 @@ class CryptoASTVisitor(ast.NodeVisitor):
         self.findings = []
         self.aliases = {}
         self.crypto_objects = {}
+        self.crypto_wrappers = {}
 
     def visit_Import(self, node):
         for alias in node.names:
@@ -146,7 +147,13 @@ class CryptoASTVisitor(ast.NodeVisitor):
         self.crypto_objects = previous_objects
 
     def visit_FunctionDef(self, node):
+        before = len(self.findings)
         self._visit_scoped_node(node)
+        # Register same-file wrappers whose bodies directly invoke a recognized API.
+        direct = [item for item in self.findings[before:]
+                  if item.get("confidence") == "High-confidence API call"]
+        if direct:
+            self.crypto_wrappers[node.name] = direct[0]
 
     def visit_AsyncFunctionDef(self, node):
         self._visit_scoped_node(node)
@@ -201,6 +208,13 @@ class CryptoASTVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         name = self._resolve_alias(_dotted_name(node.func))
         low = name.lower()
+        if isinstance(node.func, ast.Name) and node.func.id in self.crypto_wrappers:
+            wrapped = self.crypto_wrappers[node.func.id]
+            self.findings.append(_finding(
+                f"{self.filename}:{node.lineno}", wrapped["algorithm"],
+                "Wrapper invocation: " + wrapped["purpose"],
+                "Interprocedural wrapper call",
+                f"{node.func.id}() wraps {wrapped['evidence']}", wrapped.get("vulnerable")))
         if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
             object_name = node.func.value.id
             operation = node.func.attr.lower()
