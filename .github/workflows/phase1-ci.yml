@@ -1,4 +1,4 @@
-name: Phase 1 Stabilization CI
+name: Phase 1 Stabilization CI - Final Candidate
 
 on:
   push:
