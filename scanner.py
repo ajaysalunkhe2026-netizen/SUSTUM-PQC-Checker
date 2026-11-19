@@ -398,6 +398,27 @@ def _scan_language_lines(content, rel_path, ext):
     return findings
 
 
+def _mask_non_python_strings(content):
+    """Mask quoted strings in code before broad textual matching, preserving offsets and lines."""
+    output = list(content)
+    quote = None
+    escaped = False
+    for index, char in enumerate(content):
+        if quote:
+            if char not in "\\r\\n":
+                output[index] = " "
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char in (chr(39), chr(34), chr(96)):
+            quote = char
+            output[index] = " "
+    return "".join(output)
+
+
 def _mask_python_strings_and_comments(content):
     lines = content.splitlines(keepends=True)
     try:
@@ -446,7 +467,13 @@ def scan_file(filepath, relative_path=None):
 
     findings.extend(_scan_language_lines(content, rel_path, ext))
     comment_free = _strip_source_comments(content, ext)
-    text_content = _mask_python_strings_and_comments(comment_free) if ext == '.py' else comment_free
+    code_extensions = {".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh"}
+    if ext == ".py":
+        text_content = _mask_python_strings_and_comments(comment_free)
+    elif ext in code_extensions:
+        text_content = _mask_non_python_strings(comment_free)
+    else:
+        text_content = comment_free
     for line_no, raw_line in enumerate(text_content.splitlines(), 1):
         line = raw_line
         if not line.strip():
