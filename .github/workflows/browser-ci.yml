@@ -1,0 +1,25 @@
+name: Browser-native CI
+on:
+  pull_request:
+    paths: ["web/**", ".github/workflows/browser-ci.yml"]
+  push:
+    branches: ["stage2-4-browser-native"]
+    paths: ["web/**", ".github/workflows/browser-ci.yml"]
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+      - run: npx tsx scripts/generate-fixture.ts > /tmp/sustum-cbom.json
+      - run: curl -fsSL https://raw.githubusercontent.com/CycloneDX/specification/master/schema/bom-1.6.schema.json -o /tmp/bom-1.6.schema.json
+      - run: python -m pip install jsonschema
+      - run: python -c "import json,jsonschema; schema=json.load(open('/tmp/bom-1.6.schema.json')); bom=json.load(open('/tmp/sustum-cbom.json')); jsonschema.validate(bom,schema); print('Official CycloneDX 1.6 JSON Schema validation: PASS')"
