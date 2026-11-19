@@ -10,7 +10,7 @@ describe("browser scanner worker",()=>{
   expect(s).toContain("MAX_ENTRIES=5000");
   expect(s).toContain("MAX_CANDIDATES=2000");
   expect(s).toContain("MAX_FILE=2*1024*1024");
-  expect(s).toContain("MAX_TOTAL=50*1024*1024");
+  expect(s).toContain("MAX_TOTAL=50*1024*1024");\n  expect(s).toContain(".rs");\n  expect(s).toContain(".swift");
  });
  it("checks declared expansion size before extracting candidate entries",()=>{
   const s=source();
