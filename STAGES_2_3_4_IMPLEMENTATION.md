@@ -27,3 +27,5 @@ Branch: stage2-4-browser-native. Base: fix/phase1-final. No merge or deployment 
 - Expand scanner accuracy tests against frozen and held-out source corpus; measure per-language performance.
 - Test malformed/hostile ZIPs, resource exhaustion, browser compatibility, accessibility and CSP.
 - No production deployment until independent review and explicit owner approval.
+
+CI note: browser-ci.yml is installed on the PR base branch so GitHub can evaluate this workflow for the candidate pull request.
