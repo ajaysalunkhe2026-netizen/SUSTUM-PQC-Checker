@@ -5,7 +5,7 @@ const root=document.querySelector<HTMLDivElement>("#app");
 if(!root)throw new Error("Application root missing.");
 root.innerHTML = [
 '<header><div class="brand"><span class="mark">PQ</span><div><h1>SUSTUM PQC Checker</h1><p>Browser-local cryptographic inventory</p></div></div><span class="privacy">Files stay on this device</span></header>',
-'<main><section class="panel intro"><h2>Post-Quantum Readiness Scan</h2><p>Choose a ZIP project archive. Extraction and scanning run locally in a Web Worker. The archive is not uploaded.</p><label class="drop" for="archive"><strong>Select project ZIP</strong><span>Maximum archive 100 MiB · 5,000 entries · candidate files 2 MiB each</span><input id="archive" type="file" accept=".zip,application/zip"></label><button id="scan" disabled>Run local scan</button><p id="status" role="status" aria-live="polite">Waiting for an archive.</p></section>',
+'<main><section class="panel intro"><h2>Post-Quantum Readiness Scan</h2><p>Choose a ZIP project archive. Extraction and scanning run locally in a Web Worker. The archive is not uploaded.</p><label class="drop" for="archive"><strong>Select project ZIP</strong><span>Maximum archive 100 MiB · 5,000 entries · candidate files 2 MiB each</span><input id="archive" type="file" accept=".zip,application/zip"></label><div class="actions"><button id="scan" disabled>Run local scan</button><button id="cancel" class="secondary" disabled>Cancel scan</button></div><p id="status" role="status" aria-live="polite">Waiting for an archive.</p></section>',
 '<section id="results" hidden><div class="metrics"><article><b id="files">0</b><span>Files scanned</span></article><article><b id="findings">0</b><span>Crypto indicators</span></article><article><b id="deps">0</b><span>Dependencies</span></article><article><b id="diagnostics">0</b><span>Diagnostics</span></article></div>',
 '<section class="panel"><h2>Assessment & exports</h2><p id="summary"></p><div class="actions"><button id="cbom">Download CycloneDX 1.6 CBOM</button><button id="csv" class="secondary">Findings CSV</button><button id="json" class="secondary">Scan JSON</button></div><p id="cbom-status" class="muted" aria-live="polite"></p></section>',
 '<section class="panel"><h2>Cryptographic findings</h2><div class="tablewrap"><table><thead><tr><th>Algorithm</th><th>Purpose</th><th>Source</th><th>Confidence</th><th>Evidence</th><th>Review</th></tr></thead><tbody id="finding-rows"></tbody></table></div></section>',
@@ -14,9 +14,9 @@ root.innerHTML = [
 '<footer>SUSTUM · Local-first browser scanner · Review every finding before migration or compliance decisions.</footer>'
 ].join("");
 const $=<T extends HTMLElement>(id:string)=>{const e=document.getElementById(id);if(!e)throw new Error("Missing UI element: "+id);return e as T;};
-const input=$<HTMLInputElement>("archive"),scanButton=$<HTMLButtonElement>("scan"),status=$<HTMLParagraphElement>("status");
+const input=$<HTMLInputElement>("archive"),scanButton=$<HTMLButtonElement>("scan"),cancelButton=$<HTMLButtonElement>("cancel"),status=$<HTMLParagraphElement>("status");\nlet activeWorker:Worker|null=null;
 let latest:ScanResult|null=null;
-input.addEventListener("change",()=>{scanButton.disabled=!input.files?.length;status.textContent=input.files?.[0]?.name??"Waiting for an archive.";});
+input.addEventListener("change",()=>{scanButton.disabled=!input.files?.length||!!activeWorker;latest=null;status.textContent=input.files?.[0]?.name??"Waiting for an archive.";});\ncancelButton.addEventListener("click",()=>{if(!activeWorker)return;activeWorker.terminate();activeWorker=null;scanButton.disabled=!input.files?.length;cancelButton.disabled=true;status.textContent="Scan cancelled. The archive was not uploaded.";});
 scanButton.addEventListener("click",async()=>{
  const file=input.files?.[0];if(!file)return;
  scanButton.disabled=true;status.textContent="Reading archive locally…";
@@ -27,9 +27,9 @@ scanButton.addEventListener("click",async()=>{
   latest=event.data.result as ScanResult;render(latest);
   status.textContent="Scan completed in "+latest.durationMs+" ms. No source upload was performed.";
  };
- worker.onerror=()=>{worker.terminate();scanButton.disabled=false;status.textContent="Worker failed. No archive was uploaded.";};
+ worker.onerror=()=>{worker.terminate();activeWorker=null;cancelButton.disabled=true;scanButton.disabled=!input.files?.length;status.textContent="Worker failed. No archive was uploaded.";};
  try{const buffer=await file.arrayBuffer();worker.postMessage({type:"scan",buffer},[buffer]);}
- catch(error){worker.terminate();scanButton.disabled=false;status.textContent="Unable to read archive: "+String(error);}
+ catch(error){worker.terminate();activeWorker=null;cancelButton.disabled=true;scanButton.disabled=!input.files?.length;status.textContent="Unable to read archive: "+String(error);}
 });
 function render(r:ScanResult){
  $("results").removeAttribute("hidden");$("files").textContent=String(r.filesScanned);$("findings").textContent=String(r.findings.length);$("deps").textContent=String(r.dependencies.length);$("diagnostics").textContent=String(r.diagnostics.length);
