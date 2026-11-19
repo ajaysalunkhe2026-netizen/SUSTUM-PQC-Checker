@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import type {Dependency,Diagnostic,Finding,ScanResult} from "./model";
 import {parseManifest,scanSource} from "./scanner-core";
 type ScanMessage={type:"scan";buffer:ArrayBuffer};
-type ZipEntry=JSZip.JSZipObject & {unsafeOriginalName?:string;_data?:{uncompressedSize?:number;compressedSize?:number}};
+type ZipEntry=JSZip.JSZipObject&{unsafeOriginalName?:string;_data?:{uncompressedSize?:number;compressedSize?:number}};
 const worker=self as unknown as DedicatedWorkerGlobalScope;
 const MAX_ARCHIVE=100*1024*1024,MAX_ENTRIES=5000,MAX_CANDIDATES=2000,MAX_FILE=2*1024*1024,MAX_TOTAL=50*1024*1024,MAX_SCAN_MS=30000,MAX_RATIO=200;
 const sourceExt=new Set([".py",".js",".jsx",".ts",".tsx",".java",".go",".c",".h",".cpp",".cc",".hpp",".hh",".rs",".cs",".php",".rb",".swift",".kt",".scala"]);
@@ -11,10 +11,11 @@ const manifests=new Set(["package.json","requirements.txt","go.mod"]);
 worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
  if(event.data.type!=="scan")return;
  const started=performance.now(),findings:Finding[]=[],dependencies:Dependency[]=[],diagnostics:Diagnostic[]=[];
- let filesScanned=0,bytesScanned=0,candidates=0;
+ let filesScanned=0,bytesScanned=0,candidates=0,processed=0;
  try{
   if(!(event.data.buffer instanceof ArrayBuffer)||event.data.buffer.byteLength===0)throw new Error("The selected archive is empty or invalid.");
   if(event.data.buffer.byteLength>MAX_ARCHIVE)throw new Error("Archive exceeds 100 MiB.");
+  worker.postMessage({type:"progress",message:"Reading ZIP directory locally…"});
   const zip=await JSZip.loadAsync(event.data.buffer,{checkCRC32:false}),allEntries=Object.values(zip.files) as ZipEntry[];
   if(allEntries.length>MAX_ENTRIES)throw new Error("Archive exceeds 5,000 total entries.");
   const seen=new Set<string>();
@@ -36,13 +37,14 @@ worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
    if(typeof declared==="number"&&typeof compressed==="number"&&declared>1024*1024&&compressed>0&&declared/compressed>MAX_RATIO){diagnostics.push({code:"COMPRESSION_RATIO",message:"Suspicious compression ratio exceeds 200:1; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
    if(typeof declared==="number"&&bytesScanned+declared>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate declared extracted data.");
    const bytes=await entry.async("uint8array");
+   if(performance.now()-started>MAX_SCAN_MS)throw new Error("Scan exceeded the 30 second browser time budget during extraction.");
    if(bytes.byteLength>MAX_FILE){diagnostics.push({code:"FILE_LIMIT",message:"Actual extracted file size exceeds 2 MiB; entry skipped.",file:normalized.slice(0,240)});continue;}
    if(typeof declared==="number"&&bytes.byteLength!==declared){diagnostics.push({code:"SIZE_MISMATCH",message:"Extracted size differs from ZIP metadata; entry skipped.",file:normalized.slice(0,240)});continue;}
-   bytesScanned+=bytes.byteLength;
-   if(bytesScanned>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate extracted data.");
+   bytesScanned+=bytes.byteLength;if(bytesScanned>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate extracted data.");
    const source=new TextDecoder("utf-8",{fatal:false}).decode(bytes);filesScanned++;
    if(manifests.has(base))parseManifest(normalized,source,dependencies,diagnostics);
    if(sourceExt.has(ext))scanSource(normalized,source,findings);
+   processed++;if(processed===1||processed%25===0)worker.postMessage({type:"progress",message:"Scanned "+processed+" candidate files; "+findings.length+" indicators found."});
   }
   const result:ScanResult={findings,dependencies,diagnostics,filesScanned,bytesScanned,durationMs:Math.round(performance.now()-started)};
   worker.postMessage({type:"complete",result});
