@@ -19,7 +19,7 @@ from dependency_inventory import parse_manifest
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "venv", ".venv", "dist", "build", "target"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh", ".json", ".yaml", ".yml", ".env", ".properties"}
-DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "Pipfile", "Pipfile.lock", "package.json", "package-lock.json", "npm-shrinkwrap.json", "go.mod", "go.sum"}
+DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "pipfile", "pipfile.lock", "package.json", "package-lock.json", "npm-shrinkwrap.json", "go.mod", "go.sum"}
 
 # API-specific patterns are intentionally more conservative than keyword matching.
 # Each tuple: regex, algorithm, purpose, quantum-vulnerable indicator, confidence.
@@ -53,6 +53,7 @@ LANGUAGE_PATTERNS = {
         (r'\bsha256\s*\.\s*New\s*\(', "SHA-256", "Hash", False, "High-confidence API call"),
     ],
     ".c": [
+        (r'\bEVP_PKEY_CTX_new_from_name\s*\([^;]*["\']RSA["\']', "RSA", "Key generation context", True, "High-confidence OpenSSL provider API"),
         (r'\bRSA_generate_key_ex\s*\(', "RSA", "Key generation", True, "High-confidence OpenSSL API"),
         (r'\bEVP_PKEY_RSA\b', "RSA", "Asymmetric key algorithm reference", True, "OpenSSL algorithm reference"),
         (r'\bEVP_PKEY_EC\b|\bEC_KEY_new_by_curve_name\s*\(', "Elliptic Curve", "Key generation / signature", True, "High-confidence OpenSSL API"),
@@ -360,7 +361,24 @@ def _scan_language_lines(content, rel_path, ext):
                 source_line)
             if match:
                 aliases[match.group(1) or match.group(2)] = match.group(2)
+        dot_imports = set()
+        for source_line in source_lines:
+            dot_match = re.search(r"""^\s*\.\s*["']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["']""", source_line.strip())
+            if dot_match:
+                dot_imports.add(dot_match.group(1))
     for line_no, raw_line in enumerate(source_lines, 1):
+        if ext == ".go" and dot_imports:
+            dot_api = {
+                "rsa": (r"\b(?:GenerateKey|SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(", "RSA", "Cryptographic API operation"),
+                "ecdsa": (r"\bGenerateKey\s*\(", "ECDSA", "Key generation"),
+                "ecdh": (r"\bX(?:25519|448)\s*\(", "ECDH", "Key establishment"),
+                "sha1": (r"\bNew\s*\(", "SHA-1", "Hash"),
+                "sha256": (r"\bNew\s*\(", "SHA-256", "Hash"),
+            }
+            for package in dot_imports:
+                pattern, algorithm, purpose = dot_api[package]
+                if re.search(pattern, line):
+                    findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose, "High-confidence API call", line.strip()[:240], algorithm in {"RSA", "ECDSA", "ECDH"}))
         line = raw_line
         for alias, canonical in aliases.items():
             line = re.sub(r'\b' + re.escape(alias) + r'\s*\.', canonical + ".", line)
@@ -540,6 +558,9 @@ def scan_directory(target_dir):
             except (OSError, ValueError):
                 continue
             if os.path.splitext(filename)[1].lower() not in SOURCE_EXTENSIONS and filename.lower() not in DEPENDENCY_FILES:
+            if size > MAX_SOURCE_FILE_BYTES:
+                all_findings.append(_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic"))
+                continue
                 continue
             scanned_files += 1
             if scanned_files > MAX_SCAN_FILES:
