@@ -1,37 +1,68 @@
-export type Primitive = "signature"|"pke"|"key-agree"|"hash"|"unknown";
-export type Finding = { id:string; algorithm:string; family:string; primitive:Primitive; purpose:string; file:string; line:number; evidence:string; confidence:"high"|"medium"|"low"; quantumVulnerable:boolean|null; recommendation:string };
-export type Dependency = { name:string; version:string; ecosystem:string; scope:string; source:string; evidence:"declared"|"locked"|"checksum"|"unknown" };
-export type Diagnostic = { code:string; message:string; file?:string };
-export type ScanResult = { findings:Finding[]; dependencies:Dependency[]; diagnostics:Diagnostic[]; filesScanned:number; bytesScanned:number; durationMs:number };
-export type BomComponent = { type:string; name:string; "bom-ref":string; version?:string; cryptoProperties?:{assetType:"algorithm";algorithmProperties:{primitive:Primitive}}; properties?:{name:string;value:string}[] };
-export type Bom = { bomFormat:"CycloneDX"; specVersion:"1.6"; serialNumber:string; version:1; metadata:{timestamp:string;tools:{components:{type:"application";name:string;version:string}[]};component:{type:"application";name:string;"bom-ref":string}}; components:BomComponent[]; dependencies:{ref:string;dependsOn:string[]}[] };
-export async function stableId(s:string):Promise<string>{
- const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+export type Primitive="signature"|"pke"|"key-agree"|"hash"|"unknown";
+export type Finding={id:string;algorithm:string;family:string;primitive:Primitive;purpose:string;file:string;line:number;evidence:string;confidence:"high"|"medium"|"low";quantumVulnerable:boolean|null;recommendation:string};
+export type Dependency={name:string;version:string;ecosystem:string;scope:string;source:string;evidence:"declared"|"locked"|"checksum"|"unknown"};
+export type Diagnostic={code:string;message:string;file?:string};
+export type ScanResult={findings:Finding[];dependencies:Dependency[];diagnostics:Diagnostic[];filesScanned:number;bytesScanned:number;durationMs:number};
+export type BomProperty={name:string;value:string};
+export type BomComponent={type:string;name:string;"bom-ref":string;version?:string;cryptoProperties?:{assetType:"algorithm";algorithmProperties:{primitive:Primitive}};properties?:BomProperty[]};
+export type Bom={bomFormat:"CycloneDX";specVersion:"1.6";serialNumber:string;version:1;metadata:{timestamp:string;tools:{components:{type:"application";name:string;version:string}[]};component:{type:"application";name:string;"bom-ref":string}};components:BomComponent[];dependencies:{ref:string;dependsOn:string[]}[]};
+export async function stableId(value:string):Promise<string>{
+ const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
  return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
 }
+function property(name:string,value:unknown):BomProperty{return{name,value:String(value)};}
 export async function buildCbom(scan:ScanResult,project:string):Promise<Bom>{
- const components:BomComponent[]=[],seen=new Set<string>(),edges:{ref:string;dependsOn:string[]}[]=[];
- const appRef="sustum:application:"+await stableId(project);
- for(const f of [...scan.findings].sort((a,b)=>a.id.localeCompare(b.id))){
-  const ref="sustum:crypto:"+await stableId(f.id);if(seen.has(ref))continue;seen.add(ref);
+ const components:BomComponent[]=[],seen=new Set<string>(),applicationRef="urn:sustum:application:"+await stableId(project||"project");
+ const dependsOn:string[]=[];
+ const findings=[...scan.findings].sort((a,b)=>a.id.localeCompare(b.id));
+ for(const f of findings){
+  const ref="urn:sustum:crypto:"+await stableId(f.id);if(seen.has(ref))continue;seen.add(ref);dependsOn.push(ref);
   components.push({type:"cryptographic-asset",name:f.algorithm,"bom-ref":ref,cryptoProperties:{assetType:"algorithm",algorithmProperties:{primitive:f.primitive}},properties:[
-   {name:"sustum:algorithm-family",value:f.family},{name:"sustum:purpose",value:f.purpose},{name:"sustum:source-file",value:f.file},{name:"sustum:source-line",value:String(f.line)},
-   {name:"sustum:confidence",value:f.confidence},{name:"sustum:evidence",value:f.evidence.slice(0,500)},
-   {name:"sustum:quantum-vulnerable-indicator",value:f.quantumVulnerable===null?"unknown":String(f.quantumVulnerable)}
+   property("sustum:asset-kind","source-indicator"),property("sustum:algorithm-family",f.family),property("sustum:purpose",f.purpose),
+   property("sustum:source-file",f.file),property("sustum:source-line",f.line),property("sustum:confidence",f.confidence),
+   property("sustum:evidence",f.evidence.slice(0,500)),property("sustum:quantum-vulnerable-indicator",f.quantumVulnerable===null?"unknown":f.quantumVulnerable),
+   property("sustum:recommendation",f.recommendation.slice(0,500))
   ]});
  }
- const packageRefs:string[]=[];
- for(const d of [...scan.dependencies].sort((a,b)=>(a.ecosystem+a.name+a.version+a.source).localeCompare(b.ecosystem+b.name+b.version+b.source))){
-  const ref="sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.source].join("|"));if(seen.has(ref))continue;seen.add(ref);packageRefs.push(ref);
-  const c:BomComponent={type:"library",name:d.name,"bom-ref":ref,properties:[{name:"sustum:ecosystem",value:d.ecosystem},{name:"sustum:version-evidence",value:d.version},{name:"sustum:dependency-scope",value:d.scope},{name:"sustum:manifest",value:d.source},{name:"sustum:evidence-kind",value:d.evidence}]};
-  if(d.version&&d.version!=="unspecified")c.version=d.version;components.push(c);
+ const deps=[...scan.dependencies].sort((a,b)=>[a.ecosystem,a.name,a.version,a.source,a.scope].join("|").localeCompare([b.ecosystem,b.name,b.version,b.source,b.scope].join("|")));
+ for(const d of deps){
+  const ref="urn:sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.source,d.scope].join("|"));if(seen.has(ref))continue;seen.add(ref);dependsOn.push(ref);
+  const c:BomComponent={type:"library",name:d.name,"bom-ref":ref,properties:[
+   property("sustum:asset-kind","declared-dependency"),property("sustum:ecosystem",d.ecosystem),property("sustum:version-evidence",d.version),
+   property("sustum:dependency-scope",d.scope),property("sustum:manifest",d.source),property("sustum:evidence-kind",d.evidence),
+   property("sustum:crypto-use-confirmed","false")
+  ]};
+  if(d.version&&d.version!=="unspecified")c.version=d.version;
+  components.push(c);
  }
- if(packageRefs.length)edges.push({ref:appRef,dependsOn:packageRefs});
- return {bomFormat:"CycloneDX",specVersion:"1.6",serialNumber:"urn:uuid:"+crypto.randomUUID(),version:1,metadata:{timestamp:new Date().toISOString(),tools:{components:[{type:"application",name:"SUSTUM PQC Checker",version:"0.1.0"}]},component:{type:"application",name:project||"Scanned project","bom-ref":appRef}},components,dependencies:edges};
+ components.sort((a,b)=>a["bom-ref"].localeCompare(b["bom-ref"]));
+ return {bomFormat:"CycloneDX",specVersion:"1.6",serialNumber:"urn:uuid:"+crypto.randomUUID(),version:1,metadata:{
+  timestamp:new Date().toISOString(),tools:{components:[{type:"application",name:"SUSTUM PQC Checker",version:"0.1.0"}]},
+  component:{type:"application",name:project.trim()||"Scanned project","bom-ref":applicationRef}
+ },components,dependencies:dependsOn.length?[{ref:applicationRef,dependsOn:[...new Set(dependsOn)].sort()}]:[]};
 }
-export function validateCbom(b:Bom):string[]{
- const errors:string[]=[],refs=new Set<string>(),all=new Set<string>([b.metadata.component["bom-ref"]]);
- for(const c of b.components){if(!c["bom-ref"]||refs.has(c["bom-ref"]))errors.push("Missing or duplicate bom-ref.");else{refs.add(c["bom-ref"]);all.add(c["bom-ref"]);}if(c.type==="cryptographic-asset"&&(!c.cryptoProperties||c.cryptoProperties.assetType!=="algorithm"))errors.push("Cryptographic asset is missing valid cryptoProperties.");}
- for(const e of b.dependencies){if(!all.has(e.ref))errors.push("Unknown dependency source reference.");for(const d of e.dependsOn)if(!all.has(d))errors.push("Unknown dependency target reference.");}
- return errors;
+export function validateCbom(bom:Bom):string[]{
+ const errors:string[]=[],all=new Set<string>([bom.metadata.component["bom-ref"]]),seen=new Set<string>();
+ if(bom.bomFormat!=="CycloneDX"||bom.specVersion!=="1.6"||bom.version!==1)errors.push("Unsupported or malformed CycloneDX document header.");
+ if(!/^urn:uuid:[0-9a-f-]{36}$/i.test(bom.serialNumber))errors.push("Invalid CBOM serial number.");
+ if(!bom.metadata.timestamp||Number.isNaN(Date.parse(bom.metadata.timestamp)))errors.push("Invalid metadata timestamp.");
+ if(!bom.metadata.component.name||!bom.metadata.component["bom-ref"])errors.push("Missing metadata component identity.");
+ for(const c of bom.components){
+  const ref=c["bom-ref"];
+  if(!ref||seen.has(ref)){errors.push("Missing or duplicate bom-ref.");continue;}
+  seen.add(ref);all.add(ref);
+  if(!c.name||!c.type)errors.push("Component is missing type or name.");
+  if(c.type==="cryptographic-asset"){
+   if(!c.cryptoProperties||c.cryptoProperties.assetType!=="algorithm")errors.push("Cryptographic asset is missing valid cryptoProperties.");
+   else if(!["signature","pke","key-agree","hash","unknown"].includes(c.cryptoProperties.algorithmProperties.primitive))errors.push("Unsupported cryptographic primitive.");
+  }
+ }
+ const edgeSources=new Set<string>();
+ for(const edge of bom.dependencies){
+  if(!all.has(edge.ref))errors.push("Unknown dependency source reference.");
+  if(edgeSources.has(edge.ref))errors.push("Duplicate dependency source reference.");
+  edgeSources.add(edge.ref);
+  for(const target of edge.dependsOn)if(!all.has(target))errors.push("Unknown dependency target reference.");
+ }
+ return [...new Set(errors)];
 }
