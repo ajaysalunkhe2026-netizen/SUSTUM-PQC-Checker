@@ -159,7 +159,8 @@ $("cbom").addEventListener("click",async()=>{
  try{
   const bom=await buildCbom(latest,input.files?.[0]?.name??"project");
   const errors=validateCbom(bom);
-  $("cbom-status").textContent=errors.length?"Internal checks failed: "+errors.join(" "):"Internal reference checks passed. Official CycloneDX schema and independent-consumer validation are still required.";
+  if(errors.length){$("cbom-status").textContent="CBOM internal validation failed: "+errors.join(" ");return;}
+  $("cbom-status").textContent="Internal structure and reference checks passed. Official schema and independent-consumer validation remain separate release gates.";
   download("sustum-cbom-1.6.json",JSON.stringify(bom,null,2),"application/json");
  }catch(error){
   $("cbom-status").textContent="CBOM generation failed: "+String(error);
