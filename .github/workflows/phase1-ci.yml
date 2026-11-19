@@ -1,10 +1,10 @@
-name: Phase 1 Stabilization CI - Final Candidate
+name: Phase 1 Stabilization CI
 
 on:
   push:
     branches:
       - fix/phase1-engine-stabilization
-      - fix/phase1-final
+      - fix/phase1-engine-stabilization-validated
   pull_request:
     branches:
       - feature/reliable-pqc-cbom
