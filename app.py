@@ -23,23 +23,39 @@ MAX_FILES = 10000
 def safe_extract(zip_ref, extract_path):
     """Extract ZIP entries with path, symlink, count and size checks."""
     total_size = 0
+    actual_total = 0
     infos = zip_ref.infolist()
     if len(infos) > MAX_FILES:
         raise ValueError("Archive contains too many entries.")
     root = os.path.realpath(extract_path)
+    seen_paths = set()
     for info in infos:
         name = info.filename.replace("\\", "/")
         path = PurePosixPath(name)
         mode = (info.external_attr >> 16) & 0o170000
+        normalized = str(path)
         if (not name or "\x00" in name or path.is_absolute()
                 or (path.parts and ":" in path.parts[0])
                 or ".." in path.parts or mode == 0o120000):
             raise ValueError("Unsafe ZIP entry path or symlink detected.")
+        if normalized in seen_paths:
+            raise ValueError("Archive contains duplicate entry paths.")
+        seen_paths.add(normalized)
+        if info.flag_bits & 0x1:
+            raise ValueError("Encrypted ZIP entries are not supported.")
+        allowed_modes = {0, 0o100000, 0o040000}
+        if mode not in allowed_modes:
+            raise ValueError("Archive contains an unsupported special file type.")
         if info.file_size < 0 or info.file_size > MAX_SINGLE_FILE_SIZE:
             raise ValueError("An archive entry exceeds the 100 MB file limit.")
         total_size += info.file_size
         if total_size > MAX_UNCOMPRESSED_SIZE:
             raise ValueError("Uncompressed archive exceeds 500 MB limit.")
+        if info.file_size and info.compress_size == 0:
+            raise ValueError("Archive entry has an invalid compression size.")
+        if info.compress_size and info.file_size > 1024 * 1024:
+            if info.file_size / info.compress_size > 200:
+                raise ValueError("Archive entry exceeds the allowed compression ratio.")
         if info.is_dir():
             continue
         destination = os.path.realpath(os.path.join(root, *path.parts))
@@ -47,15 +63,20 @@ def safe_extract(zip_ref, extract_path):
             raise ValueError("ZIP entry escapes extraction directory.")
         os.makedirs(os.path.dirname(destination), exist_ok=True)
         written = 0
-        with zip_ref.open(info) as source, open(destination, "wb") as target:
+        with zip_ref.open(info) as source, open(destination, "xb") as target:
             while True:
                 chunk = source.read(1024 * 1024)
                 if not chunk:
                     break
                 written += len(chunk)
+                actual_total += len(chunk)
                 if written > MAX_SINGLE_FILE_SIZE:
                     raise ValueError("An extracted file exceeds the 100 MB file limit.")
+                if actual_total > MAX_UNCOMPRESSED_SIZE:
+                    raise ValueError("Actual extracted data exceeds the 500 MB limit.")
                 target.write(chunk)
+        if written != info.file_size:
+            raise ValueError("Extracted file size does not match ZIP metadata.")
 
 
 @app.get("/")
