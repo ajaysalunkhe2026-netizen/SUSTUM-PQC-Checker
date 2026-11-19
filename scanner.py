@@ -297,7 +297,7 @@ def _strip_source_comments(content, ext):
                 in_block = False
                 i += 2
             else:
-                output.append("\n" if char == "\\n" else " ")
+                output.append("\n" if char == "\n" else " ")
                 i += 1
             continue
         if quote:
