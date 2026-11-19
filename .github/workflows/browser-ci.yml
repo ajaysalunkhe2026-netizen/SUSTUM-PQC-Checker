@@ -3,11 +3,17 @@ on:
   pull_request:
     paths: ["web/**", ".github/workflows/browser-ci.yml"]
   push:
-    branches: ["stage2-4-browser-native"]
+    branches: ["stage2-4-browser-native-clean"]
     paths: ["web/**", ".github/workflows/browser-ci.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: browser-ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -16,6 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
       - run: npm install
       - run: npm test
       - run: npm run build
