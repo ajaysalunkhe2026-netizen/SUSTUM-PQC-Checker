@@ -15,6 +15,13 @@ app = Flask(__name__)
 # Prototype default: local API only. Configure explicit trusted origins before deployment.
 CORS(app, resources={r"/health": {"origins": []}, r"/scan": {"origins": []}})
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
+
+
+@app.errorhandler(413)
+def request_too_large(_error):
+    return jsonify({"error": "Uploaded archive exceeds the 200 MB request limit."}), 413
+
+
 MAX_UNCOMPRESSED_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_FILES = 10000
