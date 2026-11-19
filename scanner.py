@@ -367,6 +367,7 @@ def _scan_language_lines(content, rel_path, ext):
             if dot_match:
                 dot_imports.add(dot_match.group(1))
     for line_no, raw_line in enumerate(source_lines, 1):
+        line = raw_line
         if ext == ".go" and dot_imports:
             dot_api = {
                 "rsa": (r"\b(?:GenerateKey|SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(", "RSA", "Cryptographic API operation"),
