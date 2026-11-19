@@ -1,0 +1,21 @@
+name: Browser-native CI
+on:
+  pull_request:
+    paths: ["web/**", ".github/workflows/browser-ci.yml"]
+  push:
+    branches: ["stage2-4-browser-native"]
+    paths: ["web/**", ".github/workflows/browser-ci.yml"]
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+      - run: npm run build
