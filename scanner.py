@@ -597,19 +597,19 @@ def scan_directory(target_dir):
             except (OSError, ValueError):
                 continue
             if os.path.splitext(filename)[1].lower() not in SOURCE_EXTENSIONS and filename.lower() not in DEPENDENCY_FILES:
-            if size > MAX_SOURCE_FILE_BYTES:
-                all_findings.append(_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic"))
                 continue
-                continue
+            rel_path = os.path.relpath(fullpath, root_abs).replace(os.sep, "/")
             scanned_files += 1
             if scanned_files > MAX_SCAN_FILES:
                 all_findings.append(_finding(".", "Scan file-count limit reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_SCAN_FILES} candidate files.", None, asset_type="Scanner diagnostic"))
                 return all_findings
+            if size > MAX_SOURCE_FILE_BYTES:
+                all_findings.append(_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic"))
+                continue
             total_source_bytes += size
             if total_source_bytes > MAX_TOTAL_SOURCE_BYTES:
                 all_findings.append(_finding(".", "Scan byte budget reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_TOTAL_SOURCE_BYTES} bytes of candidate source and manifest data.", None, asset_type="Scanner diagnostic"))
                 return all_findings
-            rel_path = os.path.relpath(fullpath, root_abs).replace(os.sep, "/")
             lower = filename.lower()
             if lower == "package.json":
                 all_findings.extend(parse_package_json(fullpath, rel_path))
