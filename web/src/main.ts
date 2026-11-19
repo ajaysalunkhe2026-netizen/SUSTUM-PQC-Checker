@@ -9,7 +9,7 @@ root.innerHTML=[
 '<main><section class="panel intro"><h2>Post-Quantum Readiness Scan</h2><p>Choose a ZIP project archive. Extraction and scanning run locally in a Web Worker. The archive is not uploaded.</p><label class="drop" for="archive"><strong>Select project ZIP</strong><span>Maximum archive 100 MiB · 5,000 entries · 2,000 candidate files · 2 MiB per file</span><input id="archive" type="file" accept=".zip,application/zip"></label><div class="actions"><button id="scan" disabled>Run local scan</button><button id="cancel" class="secondary" disabled>Cancel scan</button></div><p id="status" role="status" aria-live="polite">Waiting for an archive.</p></section>',
 '<section id="results" hidden><div class="metrics"><article><b id="files">0</b><span>Files scanned</span></article><article><b id="findings">0</b><span>Crypto indicators</span></article><article><b id="deps">0</b><span>Dependencies</span></article><article><b id="diagnostics">0</b><span>Diagnostics</span></article></div>',
 '<section class="panel"><h2>Assessment & exports</h2><p id="summary"></p><div class="actions"><button id="cbom">Download CycloneDX 1.6 CBOM</button><button id="csv" class="secondary">Findings CSV</button><button id="json" class="secondary">Scan JSON</button></div><p id="cbom-status" class="muted" aria-live="polite"></p></section>',
-'<section class="panel"><h2>Cryptographic findings</h2><div class="tablewrap"><table><thead><tr><th>Algorithm</th><th>Purpose</th><th>Source</th><th>Confidence</th><th>Evidence</th><th>Review</th></tr></thead><tbody id="finding-rows"></tbody></table></div></section>',
+'<section class="panel"><h2>Cryptographic findings</h2><div class="filters"><label>Search findings<input id="finding-search" type="search" placeholder="Algorithm, file, evidence…"></label><label>Confidence<select id="confidence-filter"><option value="all">All confidence levels</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label><label>Algorithm<select id="algorithm-filter"><option value="all">All algorithms</option></select></label><span id="finding-count" role="status" aria-live="polite"></span></div><div class="tablewrap"><table><thead><tr><th>Algorithm</th><th>Purpose</th><th>Source</th><th>Confidence</th><th>Evidence</th><th>Review</th><th>Suggested next step</th></tr></thead><tbody id="finding-rows"></tbody></table></div></section>',
 '<section class="panel"><h2>Dependency inventory</h2><p class="muted">A manifest entry is not proof of cryptographic use.</p><div class="tablewrap"><table><thead><tr><th>Package</th><th>Version/constraint</th><th>Ecosystem</th><th>Scope</th><th>Source</th></tr></thead><tbody id="dep-rows"></tbody></table></div></section>',
 '<section class="panel"><h2>Diagnostics & limitations</h2><ul id="diag-rows"></ul><p class="muted">Heuristic static analysis cannot prove reachability or runtime use, and cannot discover binary-only crypto, remote services, HSMs, runtime-loaded keys or all language constructs. A clean scan does not prove that cryptography is absent.</p></section></section></main>',
 '<footer>SUSTUM · Local-first browser scanner · Review every finding before migration or compliance decisions.</footer>'
@@ -26,6 +26,12 @@ const cancelButton=$<HTMLButtonElement>("cancel");
 const status=$<HTMLParagraphElement>("status");
 let activeWorker:Worker|null=null;
 let latest:ScanResult|null=null;
+const findingSearch=$<HTMLInputElement>("finding-search");
+const confidenceFilter=$<HTMLSelectElement>("confidence-filter");
+const algorithmFilter=$<HTMLSelectElement>("algorithm-filter");
+findingSearch.addEventListener("input",()=>{if(latest)renderFindings(latest);});
+confidenceFilter.addEventListener("change",()=>{if(latest)renderFindings(latest);});
+algorithmFilter.addEventListener("change",()=>{if(latest)renderFindings(latest);});
 
 input.addEventListener("change",()=>{
  latest=null;
@@ -100,17 +106,7 @@ function render(result:ScanResult):void{
  $("deps").textContent=String(result.dependencies.length);
  $("diagnostics").textContent=String(result.diagnostics.length);
  $("summary").textContent=result.findings.length+" indicators need human review. "+result.findings.filter(x=>x.quantumVulnerable===true).length+" have a quantum-vulnerable indicator; this is not an exploitability or compliance verdict.";
- const findings=$("finding-rows");
- findings.replaceChildren();
- for(const finding of result.findings){
-  const tr=document.createElement("tr");
-  for(const value of [finding.algorithm,finding.purpose,finding.file+":"+finding.line,finding.confidence,finding.evidence,finding.quantumVulnerable===true?"Prioritize review":finding.quantumVulnerable===false?"Context review":"Unknown / manual review"]){
-   const td=document.createElement("td");
-   td.textContent=value;
-   tr.append(td);
-  }
-  findings.append(tr);
- }
+ renderFindings(result);
  const deps=$("dep-rows");
  deps.replaceChildren();
  for(const dependency of result.dependencies){
@@ -128,6 +124,24 @@ function render(result:ScanResult):void{
   const li=document.createElement("li");
   li.textContent=diagnostic.code+": "+diagnostic.message+" "+(diagnostic.file??"");
   diagnostics.append(li);
+ }
+}
+function renderFindings(result:ScanResult):void{
+ const rows=$("finding-rows");rows.replaceChildren();
+ const algorithms=[...new Set(result.findings.map(f=>f.algorithm))].sort();
+ const selected=algorithmFilter.value;
+ algorithmFilter.replaceChildren(new Option("All algorithms","all"),...algorithms.map(a=>new Option(a,a)));
+ if(selected!=="all"&&algorithms.includes(selected))algorithmFilter.value=selected;
+ const query=findingSearch.value.trim().toLowerCase(),confidence=confidenceFilter.value,algorithm=algorithmFilter.value;
+ const filtered=result.findings.filter(f=>(confidence==="all"||f.confidence===confidence)&&(algorithm==="all"||f.algorithm===algorithm)&&(!query||[f.algorithm,f.family,f.purpose,f.file,f.evidence,f.recommendation].join(" ").toLowerCase().includes(query)));
+ $("finding-count").textContent="Showing "+filtered.length+" of "+result.findings.length+" indicators";
+ for(const finding of filtered){
+  const tr=document.createElement("tr");
+  const review=finding.quantumVulnerable===true?"Prioritize review":finding.quantumVulnerable===false?"Context review":"Unknown / manual review";
+  for(const value of [finding.algorithm,finding.purpose,finding.file+":"+finding.line,finding.confidence,finding.evidence,review,finding.recommendation]){
+   const td=document.createElement("td");td.textContent=value;tr.append(td);
+  }
+  rows.append(tr);
  }
 }
 function download(name:string,data:string,type:string):void{
@@ -153,7 +167,7 @@ $("cbom").addEventListener("click",async()=>{
 });
 $("csv").addEventListener("click",()=>{
  if(!latest)return;
- const rows=[["algorithm","purpose","file","line","confidence","evidence","quantum_vulnerable"],...latest.findings.map(f=>[f.algorithm,f.purpose,f.file,String(f.line),f.confidence,f.evidence,String(f.quantumVulnerable)])];
+ const rows=[["algorithm","purpose","file","line","confidence","evidence","quantum_vulnerable","recommendation"],...latest.findings.map(f=>[f.algorithm,f.purpose,f.file,String(f.line),f.confidence,f.evidence,String(f.quantumVulnerable),f.recommendation])];
  const csv=rows.map(row=>row.map(value=>'"'+value.replace(/"/g,'""')+'"').join(",")).join("\n");
  download("sustum-findings.csv",csv,"text/csv");
 });
