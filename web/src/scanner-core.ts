@@ -10,16 +10,25 @@ const rules:{re:RegExp;algorithm:string;family:string;primitive:Finding["primiti
  * lightweight lexer, not a language parser; regex literals and language-specific raw
  * string forms remain outside its guarantees. */
 export function maskComments(source:string,ext:string):string{
- const python=ext===".py", chars=source.split(""); let i=0,state:"code"|"single"|"double"|"template"|"line"|"block"="code";
+ const python=ext===".py",chars=source.split("");let i=0;
+ let state:"code"|"single"|"double"|"template"|"triple-single"|"triple-double"|"line"|"block"="code";
  while(i<chars.length){
   const c=chars[i],n=chars[i+1];
-  if(state==="line"){if(c==="\n")state="code";else chars[i]=" ";i++;continue;}
-  if(state==="block"){if(c==="*"&&n==="/"){chars[i]=" ";chars[i+1]=" ";i+=2;state="code";}else{if(c!=="\n")chars[i]=" ";i++;}continue;}
+  if(state==="line"){if(c==="\\n")state="code";else chars[i]=" ";i++;continue;}
+  if(state==="block"){if(c==="*"&&n==="/"){chars[i]=" ";chars[i+1]=" ";i+=2;state="code";}else{if(c!=="\\n")chars[i]=" ";i++;}continue;}
   if(state==="single"||state==="double"||state==="template"){
    const end=state==="single"?"'":state==="double"?'"':"`";
-   if(c==="\\"){i+=2;continue;} if(c===end)state="code";i++;continue;
+   if(c==="\\"){i+=2;continue;}if(c===end)state="code";i++;continue;
   }
-  if(c==="'"){state="single";i++;continue;} if(c==='"'){state="double";i++;continue;}
+  if(state==="triple-single"||state==="triple-double"){
+   const end=state==="triple-single"?"'''":'"""';
+   if(source.slice(i,i+3)===end){state="code";i+=3;continue;}
+   if(c==="\\"){i+=2;continue;}i++;continue;
+  }
+  if(python&&source.slice(i,i+3)==="'''"){state="triple-single";i+=3;continue;}
+  if(python&&source.slice(i,i+3)==='"""'){state="triple-double";i+=3;continue;}
+  if(c==="'"){state="single";i++;continue;}
+  if(c==='"'){state="double";i++;continue;}
   if(!python&&c==="`"){state="template";i++;continue;}
   if(python&&c==="#"){state="line";chars[i]=" ";i++;continue;}
   if(!python&&c==="/"&&n==="/"){state="line";chars[i]=" ";chars[i+1]=" ";i+=2;continue;}
@@ -33,7 +42,7 @@ export function maskComments(source:string,ext:string):string{
 function isCodeOffset(source:string,offset:number,ext:string):boolean{
  const python=ext===".py";let i=0,state:"code"|"single"|"double"|"template"|"triple-single"|"triple-double"="code";
  while(i<offset){
-  const c=source[i],n=source[i+1],third=source[i+2];
+  const c=source[i];
   if(state==="single"||state==="double"||state==="template"){
    const end=state==="single"?"'":state==="double"?'"':"`";
    if(c==="\\\\"){i+=2;continue;}if(c===end)state="code";i++;continue;
