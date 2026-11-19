@@ -28,10 +28,13 @@ worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
  if(event.data.type!=="scan")return;const started=performance.now(),findings:Finding[]=[],dependencies:Dependency[]=[],diagnostics:Diagnostic[]=[];let filesScanned=0,bytesScanned=0;
  try{
   if(event.data.buffer.byteLength>MAX_ARCHIVE)throw new Error("Archive exceeds 100 MiB.");
-  const zip=await JSZip.loadAsync(event.data.buffer,{checkCRC32:true});const entries=Object.values(zip.files).filter(x=>!x.dir);
-  if(entries.length>MAX_ENTRIES)throw new Error("Archive exceeds 5,000 entries.");
+  const zip=await JSZip.loadAsync(event.data.buffer);const allEntries=Object.values(zip.files);
+  if(allEntries.length>MAX_ENTRIES)throw new Error("Archive exceeds 5,000 total entries.");
+  const entries=allEntries.filter(x=>!x.dir);
   for(const entry of entries){
-   const path=entry.name.replace(/\\/g,"/"),parts=path.split("/");
+   if(performance.now()-started>MAX_SCAN_MS)throw new Error("Scan exceeded the 30 second browser time budget.");
+   const raw=(entry as JSZip.JSZipObject & {unsafeOriginalName?:string}).unsafeOriginalName??entry.name;
+   const path=raw.replace(/\\/g,"/"),parts=path.split("/");
    if(path.startsWith("/")||parts.includes("..")||path.includes("\0")){diagnostics.push({code:"UNSAFE_PATH",message:"Unsafe archive path rejected.",file:path});continue;}
    const unix=entry.unixPermissions;if(typeof unix==="number"&&((unix>>>12)&0xf)===0xa){diagnostics.push({code:"SYMLINK",message:"Symbolic-link entry rejected.",file:path});continue;}
    const base=parts.at(-1)||"",ext=base.includes(".")?base.slice(base.lastIndexOf(".")).toLowerCase():"";
