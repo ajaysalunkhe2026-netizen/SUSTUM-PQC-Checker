@@ -10,10 +10,12 @@ import json
 import os
 import re
 import tokenize
+import time
 
 MAX_SOURCE_FILE_BYTES = 5 * 1024 * 1024
 MAX_SCAN_FILES = 10000
 MAX_TOTAL_SOURCE_BYTES = 100 * 1024 * 1024
+MAX_SCAN_SECONDS = 60
 
 from dependency_inventory import parse_manifest
 
@@ -587,12 +589,16 @@ def scan_directory(target_dir):
     root_abs = os.path.realpath(target_dir)
     scanned_files = 0
     total_source_bytes = 0
+    scan_started = time.monotonic()
     for current, dirs, files in os.walk(root_abs, followlinks=False):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(current, d))]
         for filename in sorted(files):
             fullpath = os.path.join(current, filename)
             if os.path.islink(fullpath):
                 continue
+            if time.monotonic() - scan_started > MAX_SCAN_SECONDS:
+                all_findings.append(_finding(".", "Scan time budget reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_SCAN_SECONDS} seconds.", None, asset_type="Scanner diagnostic"))
+                return all_findings
             try:
                 if os.path.commonpath([root_abs, os.path.realpath(fullpath)]) != root_abs:
                     continue
