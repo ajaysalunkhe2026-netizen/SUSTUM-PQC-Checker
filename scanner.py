@@ -488,11 +488,22 @@ def parse_package_json(filepath, rel_path):
     try:
         with open(filepath, encoding="utf-8") as handle:
             data = json.load(handle)
-    except (OSError, ValueError):
-        return []
+    except (OSError, ValueError) as exc:
+        return [_finding(rel_path, "package.json parse error", "Dependency inventory incomplete",
+                         "Low-confidence diagnostic", str(exc)[:240], None,
+                         asset_type="Scanner diagnostic")]
+    if not isinstance(data, dict):
+        return [_finding(rel_path, "Invalid package.json root", "Dependency inventory incomplete",
+                         "Low-confidence diagnostic", "package.json root must be a JSON object.", None,
+                         asset_type="Scanner diagnostic")]
     rows = []
     for group in ("dependencies", "devDependencies", "optionalDependencies"):
-        for name, version in (data.get(group) or {}).items():
+        entries = data.get(group) or {}
+        if not isinstance(entries, dict):
+            return [_finding(rel_path, "Invalid dependency section", "Dependency inventory incomplete",
+                             "Low-confidence diagnostic", f"{group} must be a JSON object.", None,
+                             asset_type="Scanner diagnostic")]
+        for name, version in entries.items():
             rows.append(_dependency(name, str(version), rel_path))
     return rows
 
