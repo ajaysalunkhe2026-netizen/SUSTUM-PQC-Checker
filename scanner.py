@@ -405,7 +405,7 @@ def _mask_non_python_strings(content):
     escaped = False
     for index, char in enumerate(content):
         if quote:
-            if char not in "\\r\\n":
+            if char not in "\r\n":
                 output[index] = " "
             if escaped:
                 escaped = False
