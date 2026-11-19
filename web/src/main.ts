@@ -35,6 +35,7 @@ algorithmFilter.addEventListener("change",()=>{if(latest)renderFindings(latest);
 
 input.addEventListener("change",()=>{
  latest=null;
+ $("results").hidden=true;
  scanButton.disabled=!input.files?.length||!!activeWorker;
  status.textContent=input.files?.[0]?.name??"Waiting for an archive.";
 });
@@ -56,8 +57,11 @@ scanButton.addEventListener("click",async()=>{
  scanButton.disabled=true;
  cancelButton.disabled=false;
  latest=null;
+ $("results").hidden=true;
  status.textContent="Reading archive locally…";
- const worker=new Worker(new URL("./scanner.worker.ts",import.meta.url),{type:"module"});
+ let worker:Worker;
+ try{worker=new Worker(new URL("./scanner.worker.ts",import.meta.url),{type:"module"});}
+ catch(error){scanButton.disabled=!input.files?.length;cancelButton.disabled=true;status.textContent="Unable to start the local scanner worker: "+String(error);return;}
  activeWorker=worker;
  worker.onmessage=(event:MessageEvent)=>{
   if(activeWorker!==worker)return;
@@ -169,7 +173,7 @@ $("cbom").addEventListener("click",async()=>{
 $("csv").addEventListener("click",()=>{
  if(!latest)return;
  const rows=[["algorithm","purpose","file","line","confidence","evidence","quantum_vulnerable","recommendation"],...latest.findings.map(f=>[f.algorithm,f.purpose,f.file,String(f.line),f.confidence,f.evidence,String(f.quantumVulnerable),f.recommendation])];
- const csv=rows.map(row=>row.map(value=>'"'+value.replace(/"/g,'""')+'"').join(",")).join("\n");
+ const csv=rows.map(row=>row.map(value=>{const safe=/^[\\t\\r ]*[=+\\-@]/.test(value)?"'"+value:value;return '"'+safe.replace(/"/g,'""')+'"';}).join(",")).join("\n");
  download("sustum-findings.csv",csv,"text/csv");
 });
 $("json").addEventListener("click",()=>{
