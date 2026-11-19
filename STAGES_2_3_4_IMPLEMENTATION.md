@@ -2,38 +2,41 @@
 
 Branch: `stage2-4-browser-native-clean`. Pull request: #5. Base: `fix/phase1-final`. No merge or deployment has been performed.
 
-## Phase 2 — Browser-native scanner implementation
+## Phase 2 — Browser-native scanner
 
-- Separate Vite + TypeScript static application; scanning does not call the Flask `/scan` endpoint and does not upload the archive.
+- Separate Vite + TypeScript static application; scanning does not call Flask `/scan` and does not upload the selected archive.
 - ZIP work runs in a dedicated Web Worker. The UI reports progress and permits cancellation by terminating the worker.
-- Resource limits: 100 MiB archive, 5,000 total entries, 2,000 candidate files, 2 MiB per candidate file, 50 MiB aggregate candidate bytes, and 30-second elapsed checks between entries.
+- Resource limits: 100 MiB archive, 5,000 total entries, 2,000 candidate files, 2 MiB per candidate file, 50 MiB aggregate candidate bytes, and 30-second elapsed checks before and after extraction operations.
 - Declared uncompressed sizes and suspicious compression ratios are checked before extracting candidate files; actual extracted sizes are checked again.
 - Rejects absolute paths, Windows drive paths, traversal, malformed path segments, duplicate normalized paths and Unix symlinks.
 - Detection and manifest coverage remain intentionally narrow. This is not feature parity with the Python scanner and is not a full language parser.
-- **Status:** implementation work advanced; automated verification and browser runtime validation intentionally deferred to the final testing pass.
 
-## Phase 3 — CBOM model
+## Phase 3 — CBOM model and evidence
 
-- Normalized findings and dependency records with source location, evidence, confidence and quantum-vulnerability indicator.
-- CycloneDX 1.6 cryptographic assets use native cryptoProperties and algorithmProperties. Custom SUSTUM properties preserve family, purpose, evidence and provenance.
-- Dependency components distinguish declared inventory from observed source findings.
-- Deterministic component ordering and stable internal references; internal reference integrity checks.
-- Official schema validation and independent-consumer interoperability remain outstanding.
+- Normalized finding and dependency records preserve source location, detector evidence, confidence, quantum-vulnerability indicator and a cautious migration recommendation.
+- CycloneDX 1.6 cryptographic assets use native `cryptoProperties` with `algorithmProperties.primitive`; SUSTUM properties retain family, purpose, evidence and provenance.
+- Dependency components retain ecosystem, version evidence, scope and manifest provenance. They are explicitly marked as declared dependencies and `crypto-use-confirmed=false`; manifest presence is never represented as proof of cryptographic use.
+- Stable SHA-256-derived component references, deterministic component ordering, application-to-component dependency edges, and internal checks for duplicate/missing/dangling references are implemented.
+- CBOM download is blocked when internal validation fails.
+- Official schema validation and independent-consumer interoperability remain unverified release gates.
 
-## Phase 4 — Intelligence and reporting
+## Phase 4 — Findings intelligence and reporting
 
-- Findings include purpose, evidence, source location, confidence and cautious migration guidance.
-- UI includes scan summary, findings, dependency inventory, diagnostics and limitations.
-- JSON, CSV and CycloneDX CBOM downloads.
-- No compliance or exploitability verdict.
+- Findings show algorithm, primitive/purpose context, source file and line, confidence, raw evidence, quantum-vulnerability indicator and a review recommendation.
+- Interactive search, confidence filter and algorithm filter support triage. User-controlled source/evidence strings are rendered with `textContent`, not HTML interpolation.
+- Summary metrics, dependency inventory, diagnostics and explicit limitations are shown.
+- JSON and CycloneDX 1.6 CBOM downloads are provided. CSV includes recommendations and neutralizes formula-leading cell values to reduce spreadsheet formula injection risk.
+- No compliance, exploitability or complete-inventory verdict is claimed.
 
-## Deferred final verification and release gates
+## Final verification and release gates
 
-The owner requested that testing be performed at the end. The following are deliberately not represented as passed:
-- Run npm test and npm run build on this exact branch.
-- Validate CBOM against official CycloneDX 1.6 JSON Schema and at least one independent consumer.
-- Expand scanner accuracy tests against frozen and held-out source corpus; measure per-language performance.
-- Test malformed/hostile ZIPs, resource exhaustion, browser compatibility, accessibility and CSP.
-- Review the diff and obtain explicit owner approval before any merge or production deployment.
+The owner asked to defer testing until the final pass. No tests, build, browser runtime checks or schema validation have been run by this implementation pass. Do not treat implementation as verified or production-ready until the following are completed:
+
+- Run `npm test` and `npm run build` on this exact branch.
+- Validate generated CBOM against the official CycloneDX 1.6 JSON Schema and at least one independent consumer.
+- Expand scanner accuracy testing against frozen and held-out source corpora; report precision/recall per supported language and keep ambiguous cases separate.
+- Test malformed/hostile ZIPs, cancellation during extraction, resource exhaustion, browser compatibility, accessibility and CSP.
+- Review the final diff and resolve the outstanding PR base-branch divergence before any merge.
+- Obtain explicit owner approval before merge or production deployment.
 
 The candidate is not deployed to the production website.
