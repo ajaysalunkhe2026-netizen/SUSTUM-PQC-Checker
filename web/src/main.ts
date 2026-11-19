@@ -173,7 +173,7 @@ $("cbom").addEventListener("click",async()=>{
 $("csv").addEventListener("click",()=>{
  if(!latest)return;
  const rows=[["algorithm","purpose","file","line","confidence","evidence","quantum_vulnerable","recommendation"],...latest.findings.map(f=>[f.algorithm,f.purpose,f.file,String(f.line),f.confidence,f.evidence,String(f.quantumVulnerable),f.recommendation])];
- const csv=rows.map(row=>row.map(value=>{const safe=/^[=+\\-@]/.test(value.trimStart())?"'"+value:value;return '"'+safe.replace(/"/g,'""')+'"';}).join(",")).join("\n");
+ const csv=rows.map(row=>row.map(value=>{const first=value.trimStart()[0];const safe=first==="="||first==="+"||first==="-"||first==="@"?"'"+value:value;return '"'+safe.replace(/"/g,'""')+'"';}).join(",")).join("\n");
  download("sustum-findings.csv",csv,"text/csv");
 });
 $("json").addEventListener("click",()=>{
