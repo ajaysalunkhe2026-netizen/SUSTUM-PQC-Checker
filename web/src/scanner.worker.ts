@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import type {Dependency,Diagnostic,Finding,ScanResult} from "./model";
 type ScanMessage={type:"scan";buffer:ArrayBuffer};
 const worker=self as unknown as DedicatedWorkerGlobalScope;
-const MAX_ARCHIVE=100*1024*1024,MAX_ENTRIES=5000,MAX_FILE=2*1024*1024,MAX_TOTAL=50*1024*1024;
+const MAX_ARCHIVE=100*1024*1024,MAX_ENTRIES=5000,MAX_FILE=2*1024*1024,MAX_TOTAL=50*1024*1024,MAX_SCAN_MS=30000;
 const rules:{re:RegExp;algorithm:string;family:string;primitive:Finding["primitive"];purpose:string;vulnerable:boolean|null;confidence:Finding["confidence"]}[]=[
  {re:/\b(?:KeyPairGenerator\s*\.\s*getInstance\s*\(\s*["']RSA|generateKeyPair(?:Sync)?\s*\(\s*["']rsa|rsa\s*\.\s*GenerateKey\s*\(|RSA_generate_key_ex\s*\()/g,algorithm:"RSA",family:"RSA",primitive:"pke",purpose:"Asymmetric key generation/use",vulnerable:true,confidence:"high"},
  {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["'][^"']*ECDSA|createSign\s*\(|ecdsa\s*\.\s*Sign)/g,algorithm:"ECDSA",family:"ECDSA",primitive:"signature",purpose:"Digital signature",vulnerable:true,confidence:"medium"},
