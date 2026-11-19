@@ -42,7 +42,8 @@ export async function buildCbom(scan:ScanResult,project:string):Promise<Bom>{
  },components,dependencies:dependsOn.length?[{ref:applicationRef,dependsOn:[...new Set(dependsOn)].sort()}]:[]};
 }
 export function validateCbom(bom:Bom):string[]{
- const errors:string[]=[],all=new Set<string>([bom.metadata.component["bom-ref"]]),seen=new Set<string>();
+ const errors:string[]=[],applicationRef=bom.metadata.component["bom-ref"],all=new Set<string>([applicationRef]),seen=new Set<string>();
+ if(!applicationRef||!applicationRef.startsWith("urn:sustum:application:"))errors.push("Invalid or missing application bom-ref.");
  if(bom.bomFormat!=="CycloneDX"||bom.specVersion!=="1.6"||bom.version!==1)errors.push("Unsupported or malformed CycloneDX document header.");
  if(!/^urn:uuid:[0-9a-f-]{36}$/i.test(bom.serialNumber))errors.push("Invalid CBOM serial number.");
  if(!bom.metadata.timestamp||Number.isNaN(Date.parse(bom.metadata.timestamp)))errors.push("Invalid metadata timestamp.");
@@ -50,6 +51,7 @@ export function validateCbom(bom:Bom):string[]{
  for(const c of bom.components){
   const ref=c["bom-ref"];
   if(!ref||seen.has(ref)){errors.push("Missing or duplicate bom-ref.");continue;}
+  if(ref===applicationRef)errors.push("Component bom-ref collides with metadata application reference.");
   seen.add(ref);all.add(ref);
   if(!c.name||!c.type)errors.push("Component is missing type or name.");
   if(c.type==="cryptographic-asset"){
@@ -62,7 +64,7 @@ export function validateCbom(bom:Bom):string[]{
   if(!all.has(edge.ref))errors.push("Unknown dependency source reference.");
   if(edgeSources.has(edge.ref))errors.push("Duplicate dependency source reference.");
   edgeSources.add(edge.ref);
-  for(const target of edge.dependsOn)if(!all.has(target))errors.push("Unknown dependency target reference.");
+  const targets=new Set<string>();for(const target of edge.dependsOn){if(!all.has(target))errors.push("Unknown dependency target reference.");if(targets.has(target))errors.push("Duplicate dependency target reference.");targets.add(target);}
  }
  return [...new Set(errors)];
 }
