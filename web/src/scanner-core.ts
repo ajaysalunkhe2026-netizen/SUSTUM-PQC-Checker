@@ -45,12 +45,12 @@ function isCodeOffset(source:string,offset:number,ext:string):boolean{
   const c=source[i];
   if(state==="single"||state==="double"||state==="template"){
    const end=state==="single"?"'":state==="double"?'"':"`";
-   if(c==="\\\\"){i+=2;continue;}if(c===end)state="code";i++;continue;
+   if(c==="\\"){i+=2;continue;}if(c===end)state="code";i++;continue;
   }
   if(state==="triple-single"||state==="triple-double"){
    const end=state==="triple-single"?"'''":'"""';
    if(source.slice(i,i+3)===end){state="code";i+=3;continue;}
-   if(c==="\\\\"){i+=2;continue;}i++;continue;
+   if(c==="\\"){i+=2;continue;}i++;continue;
   }
   if(python&&source.slice(i,i+3)==="'''"){state="triple-single";i+=3;continue;}
   if(python&&source.slice(i,i+3)==='"""'){state="triple-double";i+=3;continue;}
