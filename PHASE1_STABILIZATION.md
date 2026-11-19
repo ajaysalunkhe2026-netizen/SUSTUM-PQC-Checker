@@ -1,7 +1,7 @@
 # Phase 1 — Engine Stabilization
 
-**Status:** Implemented on `fix/phase1-engine-stabilization-validated`  
-**Review PR:** #2 — targets `feature/reliable-pqc-cbom`; does not target `main`.
+**Status:** Implemented on `fix/phase1-final`  
+**Review PR:** #3 — targets `feature/reliable-pqc-cbom`; does not target `main`.
 
 ## Changes
 
@@ -38,7 +38,7 @@ Added `tests/test_phase1_hardening.py` for:
 - OpenSSL provider API indicators.
 - String-only algorithm references.
 - Evidence/confidence metadata.
-- Oversized files and symlink skipping.
+- Oversized files, symlink skipping, candidate-file count, aggregate-byte and wall-clock budgets, and malformed manifest diagnostics.
 - ZIP traversal, duplicate paths, symlink entries, and high compression ratios.
 
 ## CI validation
@@ -49,7 +49,7 @@ The Phase 1 workflow runs:
 3. Hand-authored detection regression evaluator.
 4. Source-backed real-world evaluator.
 
-The latest successful run is recorded in GitHub Actions run **44572522844**. A second existing MVP workflow also passed in run **44572522719**.
+The final candidate passed GitHub Actions run **44573171622** on source/test commit `bf40d4fe36c500a10524f4a76e376109b3f7609d`. The run completed compilation, all unit/API tests, the hand-authored detection evaluator, and the source-backed real-world evaluator.
 
 ### Curated source-backed benchmark result
 
@@ -67,7 +67,9 @@ The latest successful run is recorded in GitHub Actions run **44572522844**. A s
 | Recall | 1.000 |
 | F1 | 1.000 |
 
-These are regression metrics on a curated excerpt corpus across five upstream repositories and 29 source files. They are **not** production accuracy estimates, a statistically representative sample, or independent external validation. The 10 ambiguous cases are excluded from binary metrics; some purpose classifications remain contextual and require review.
+These are regression metrics on a curated excerpt corpus across five upstream repositories and 29 source files. They are **not** production accuracy estimates, a statistically representative sample, or independent external validation. The 10 ambiguous cases are excluded from binary metrics. The evaluator also reports one purpose mismatch: the OpenSSL provider fixture detects an RSA key-generation context, not proof that key generation completed. This is intentionally kept as a narrower contextual finding rather than overstating the evidence.
+
+The final CI run completed **68 unit/API tests** successfully.
 
 ## Remaining limitations
 
