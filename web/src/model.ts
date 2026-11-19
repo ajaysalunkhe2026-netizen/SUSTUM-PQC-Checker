@@ -3,7 +3,7 @@ export type Finding = { id:string; algorithm:string; family:string; primitive:Pr
 export type Dependency = { name:string; version:string; ecosystem:string; scope:string; source:string; evidence:"declared"|"locked"|"checksum"|"unknown" };
 export type Diagnostic = { code:string; message:string; file?:string };
 export type ScanResult = { findings:Finding[]; dependencies:Dependency[]; diagnostics:Diagnostic[]; filesScanned:number; bytesScanned:number; durationMs:number };
-export type BomComponent = { type:string; name:string; "bom-ref":string; version?:string; cryptoProperties?:{assetType:"algorithm";algorithmProperties:{primitive:Primitive;algorithmFamily:string}}; properties?:{name:string;value:string}[] };
+export type BomComponent = { type:string; name:string; "bom-ref":string; version?:string; cryptoProperties?:{assetType:"algorithm";algorithmProperties:{primitive:Primitive}}; properties?:{name:string;value:string}[] };
 export type Bom = { bomFormat:"CycloneDX"; specVersion:"1.6"; serialNumber:string; version:1; metadata:{timestamp:string;tools:{components:{type:"application";name:string;version:string}[]};component:{type:"application";name:string;"bom-ref":string}}; components:BomComponent[]; dependencies:{ref:string;dependsOn:string[]}[] };
 export function stableId(s:string):string {
  let h=2166136261; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return (h>>>0).toString(16).padStart(8,"0")+"-"+s.length.toString(16);
@@ -13,8 +13,8 @@ export function buildCbom(scan:ScanResult,project:string):Bom {
  const appRef="sustum:application:"+stableId(project);
  for(const f of [...scan.findings].sort((a,b)=>a.id.localeCompare(b.id))){
   const ref="sustum:crypto:"+stableId(f.id); if(seen.has(ref))continue; seen.add(ref);
-  components.push({type:"cryptographic-asset",name:f.algorithm,"bom-ref":ref,cryptoProperties:{assetType:"algorithm",algorithmProperties:{primitive:f.primitive,algorithmFamily:f.family}},properties:[
-   {name:"sustum:purpose",value:f.purpose},{name:"sustum:source-file",value:f.file},{name:"sustum:source-line",value:String(f.line)},
+  components.push({type:"cryptographic-asset",name:f.algorithm,"bom-ref":ref,cryptoProperties:{assetType:"algorithm",algorithmProperties:{primitive:f.primitive}},properties:[
+   {name:"sustum:algorithm-family",value:f.family},{name:"sustum:purpose",value:f.purpose},{name:"sustum:source-file",value:f.file},{name:"sustum:source-line",value:String(f.line)},
    {name:"sustum:confidence",value:f.confidence},{name:"sustum:evidence",value:f.evidence.slice(0,500)},
    {name:"sustum:quantum-vulnerable-indicator",value:f.quantumVulnerable===null?"unknown":String(f.quantumVulnerable)}
   ]});
