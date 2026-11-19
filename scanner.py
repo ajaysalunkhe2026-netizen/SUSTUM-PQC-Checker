@@ -284,7 +284,7 @@ def _strip_source_comments(content, ext):
         char = content[i]
         nxt = content[i + 1] if i + 1 < len(content) else ""
         if in_line:
-            if char == "\\n":
+            if char == "\n":
                 in_line = False
                 output.append(char)
             else:
@@ -297,7 +297,7 @@ def _strip_source_comments(content, ext):
                 in_block = False
                 i += 2
             else:
-                output.append("\\n" if char == "\\n" else " ")
+                output.append("\n" if char == "\\n" else " ")
                 i += 1
             continue
         if quote:
@@ -363,7 +363,7 @@ def _scan_language_lines(content, rel_path, ext):
     for line_no, raw_line in enumerate(source_lines, 1):
         line = raw_line
         for alias, canonical in aliases.items():
-            line = re.sub(r'\\b' + re.escape(alias) + r'\\s*\\.', canonical + ".", line)
+            line = re.sub(r'\b' + re.escape(alias) + r'\s*\.', canonical + ".", line)
         if not line.strip():
             continue
         for pattern, algorithm, purpose, vulnerable, confidence in patterns:
