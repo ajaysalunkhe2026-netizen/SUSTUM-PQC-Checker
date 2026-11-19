@@ -6,9 +6,27 @@ const rules:{re:RegExp;algorithm:string;family:string;primitive:Finding["primiti
  {re:/\b(?:KeyAgreement\s*\.\s*getInstance\s*\(\s*["']ECDH|createECDH\s*\(|ecdh\s*\.\s*X(?:25519|448)\s*\()/g,algorithm:"ECDH",family:"ECDH",primitive:"key-agree",purpose:"Key establishment",vulnerable:true,confidence:"medium"},
  {re:/\b(?:MessageDigest\s*\.\s*getInstance\s*\(\s*["']SHA-?1|sha1\s*\.\s*New\s*\()/g,algorithm:"SHA-1",family:"SHA",primitive:"hash",purpose:"Hash",vulnerable:false,confidence:"medium"}
 ];
-export function maskComments(s:string,ext:string):string{
- if(ext===".py")return s.replace(/(^|\s)#.*$/gm,m=>m.replace(/[^\n]/g," "));
- return s.replace(/\/\*[\s\S]*?\*\//g,m=>m.replace(/[^\n]/g," ")).replace(/(^|\s)\/\/[^\n]*/gm,m=>m.replace(/[^\n]/g," "));
+/** Masks comments while preserving every newline and every quoted literal. This is a
+ * lightweight lexer, not a language parser; regex literals and language-specific raw
+ * string forms remain outside its guarantees. */
+export function maskComments(source:string,ext:string):string{
+ const python=ext===".py", chars=source.split(""); let i=0,state:"code"|"single"|"double"|"template"|"line"|"block"="code";
+ while(i<chars.length){
+  const c=chars[i],n=chars[i+1];
+  if(state==="line"){if(c==="\n")state="code";else chars[i]=" ";i++;continue;}
+  if(state==="block"){if(c==="*"&&n==="/"){chars[i]=" ";chars[i+1]=" ";i+=2;state="code";}else{if(c!=="\n")chars[i]=" ";i++;}continue;}
+  if(state==="single"||state==="double"||state==="template"){
+   const end=state==="single"?"'":state==="double"?'"':"`";
+   if(c==="\\"){i+=2;continue;} if(c===end)state="code";i++;continue;
+  }
+  if(c==="'"){state="single";i++;continue;} if(c==='"'){state="double";i++;continue;}
+  if(!python&&c==="`"){state="template";i++;continue;}
+  if(python&&c==="#"){state="line";chars[i]=" ";i++;continue;}
+  if(!python&&c==="/"&&n==="/"){state="line";chars[i]=" ";chars[i+1]=" ";i+=2;continue;}
+  if(!python&&c==="/"&&n==="*"){state="block";chars[i]=" ";chars[i+1]=" ";i+=2;continue;}
+  i++;
+ }
+ return chars.join("");
 }
 export function parseManifest(path:string,s:string,deps:Dependency[],diag:Diagnostic[]):void{
  const name=path.split("/").pop()||"";
