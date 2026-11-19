@@ -5,14 +5,15 @@ export type Diagnostic = { code:string; message:string; file?:string };
 export type ScanResult = { findings:Finding[]; dependencies:Dependency[]; diagnostics:Diagnostic[]; filesScanned:number; bytesScanned:number; durationMs:number };
 export type BomComponent = { type:string; name:string; "bom-ref":string; version?:string; cryptoProperties?:{assetType:"algorithm";algorithmProperties:{primitive:Primitive}}; properties?:{name:string;value:string}[] };
 export type Bom = { bomFormat:"CycloneDX"; specVersion:"1.6"; serialNumber:string; version:1; metadata:{timestamp:string;tools:{components:{type:"application";name:string;version:string}[]};component:{type:"application";name:string;"bom-ref":string}}; components:BomComponent[]; dependencies:{ref:string;dependsOn:string[]}[] };
-export function stableId(s:string):string {
- let h=2166136261; for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);} return (h>>>0).toString(16).padStart(8,"0")+"-"+s.length.toString(16);
+export async function stableId(s:string):Promise<string>{
+ const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+ return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
 }
-export function buildCbom(scan:ScanResult,project:string):Bom {
- const components:BomComponent[]=[], seen=new Set<string>(), edges:{ref:string;dependsOn:string[]}[]=[];
- const appRef="sustum:application:"+stableId(project);
+export async function buildCbom(scan:ScanResult,project:string):Promise<Bom>{
+ const components:BomComponent[]=[],seen=new Set<string>(),edges:{ref:string;dependsOn:string[]}[]=[];
+ const appRef="sustum:application:"+await stableId(project);
  for(const f of [...scan.findings].sort((a,b)=>a.id.localeCompare(b.id))){
-  const ref="sustum:crypto:"+stableId(f.id); if(seen.has(ref))continue; seen.add(ref);
+  const ref="sustum:crypto:"+await stableId(f.id);if(seen.has(ref))continue;seen.add(ref);
   components.push({type:"cryptographic-asset",name:f.algorithm,"bom-ref":ref,cryptoProperties:{assetType:"algorithm",algorithmProperties:{primitive:f.primitive}},properties:[
    {name:"sustum:algorithm-family",value:f.family},{name:"sustum:purpose",value:f.purpose},{name:"sustum:source-file",value:f.file},{name:"sustum:source-line",value:String(f.line)},
    {name:"sustum:confidence",value:f.confidence},{name:"sustum:evidence",value:f.evidence.slice(0,500)},
@@ -21,7 +22,7 @@ export function buildCbom(scan:ScanResult,project:string):Bom {
  }
  const packageRefs:string[]=[];
  for(const d of [...scan.dependencies].sort((a,b)=>(a.ecosystem+a.name+a.version+a.source).localeCompare(b.ecosystem+b.name+b.version+b.source))){
-  const ref="sustum:dependency:"+stableId([d.ecosystem,d.name,d.version,d.source].join("|"));if(seen.has(ref))continue;seen.add(ref);packageRefs.push(ref);
+  const ref="sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.source].join("|"));if(seen.has(ref))continue;seen.add(ref);packageRefs.push(ref);
   const c:BomComponent={type:"library",name:d.name,"bom-ref":ref,properties:[{name:"sustum:ecosystem",value:d.ecosystem},{name:"sustum:version-evidence",value:d.version},{name:"sustum:dependency-scope",value:d.scope},{name:"sustum:manifest",value:d.source},{name:"sustum:evidence-kind",value:d.evidence}]};
   if(d.version&&d.version!=="unspecified")c.version=d.version;components.push(c);
  }
