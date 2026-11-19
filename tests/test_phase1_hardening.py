@@ -5,7 +5,9 @@ import tempfile
 import unittest
 import warnings
 import zipfile
+from unittest.mock import patch
 
+import scanner
 from app import safe_extract
 from scanner import (
     MAX_SOURCE_FILE_BYTES,
@@ -96,6 +98,38 @@ class ScannerRegressionTests(unittest.TestCase):
             except (OSError, NotImplementedError):
                 self.skipTest("Symlinks are unavailable on this platform.")
             self.assertEqual(scan_directory(root), [])
+
+    def test_candidate_file_count_budget_emits_diagnostic(self):
+        with tempfile.TemporaryDirectory() as root:
+            for name in ("a.js", "b.js"):
+                with open(os.path.join(root, name), "w", encoding="utf-8") as handle:
+                    handle.write("const value = 1;")
+            with patch.object(scanner, "MAX_SCAN_FILES", 1):
+                findings = scan_directory(root)
+        self.assertTrue(any(x["algorithm"] == "Scan file-count limit reached" for x in findings))
+
+    def test_aggregate_byte_budget_emits_diagnostic(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "a.js"), "w", encoding="utf-8") as handle:
+                handle.write("const value = 1;")
+            with patch.object(scanner, "MAX_TOTAL_SOURCE_BYTES", 1):
+                findings = scan_directory(root)
+        self.assertTrue(any(x["algorithm"] == "Scan byte budget reached" for x in findings))
+
+    def test_wall_clock_budget_emits_diagnostic(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "a.js"), "w", encoding="utf-8") as handle:
+                handle.write("const value = 1;")
+            with patch("scanner.time.monotonic", side_effect=[0.0, 61.0]):
+                findings = scan_directory(root)
+        self.assertTrue(any(x["algorithm"] == "Scan time budget reached" for x in findings))
+
+    def test_malformed_package_json_emits_diagnostic(self):
+        with tempfile.TemporaryDirectory() as root:
+            with open(os.path.join(root, "package.json"), "w", encoding="utf-8") as handle:
+                handle.write("[]")
+            findings = scan_directory(root)
+        self.assertTrue(any(x["asset_type"] == "Scanner diagnostic" for x in findings))
 
 
 class ZipExtractionSecurityTests(unittest.TestCase):
