@@ -10,12 +10,18 @@ import json
 import os
 import re
 import tokenize
+import time
+
+MAX_SOURCE_FILE_BYTES = 5 * 1024 * 1024
+MAX_SCAN_FILES = 10000
+MAX_TOTAL_SOURCE_BYTES = 100 * 1024 * 1024
+MAX_SCAN_SECONDS = 60
 
 from dependency_inventory import parse_manifest
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "venv", ".venv", "dist", "build", "target"}
 SOURCE_EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh", ".json", ".yaml", ".yml", ".env", ".properties"}
-DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "Pipfile", "Pipfile.lock", "package.json", "package-lock.json", "npm-shrinkwrap.json", "go.mod", "go.sum"}
+DEPENDENCY_FILES = {"requirements.txt", "pyproject.toml", "pipfile", "pipfile.lock", "package.json", "package-lock.json", "npm-shrinkwrap.json", "go.mod", "go.sum"}
 
 # API-specific patterns are intentionally more conservative than keyword matching.
 # Each tuple: regex, algorithm, purpose, quantum-vulnerable indicator, confidence.
@@ -49,6 +55,7 @@ LANGUAGE_PATTERNS = {
         (r'\bsha256\s*\.\s*New\s*\(', "SHA-256", "Hash", False, "High-confidence API call"),
     ],
     ".c": [
+        (r'\bEVP_PKEY_CTX_new_from_name\s*\([^;]*["\']RSA["\']', "RSA", "Key generation context", True, "High-confidence OpenSSL provider API"),
         (r'\bRSA_generate_key_ex\s*\(', "RSA", "Key generation", True, "High-confidence OpenSSL API"),
         (r'\bEVP_PKEY_RSA\b', "RSA", "Asymmetric key algorithm reference", True, "OpenSSL algorithm reference"),
         (r'\bEVP_PKEY_EC\b|\bEC_KEY_new_by_curve_name\s*\(', "Elliptic Curve", "Key generation / signature", True, "High-confidence OpenSSL API"),
@@ -93,7 +100,11 @@ def _finding(location, algorithm, purpose, confidence, evidence, vulnerable=None
         "location": location, "asset_type": asset_type, "algorithm": algorithm,
         "key_size": "Unknown", "purpose": purpose, "protocol": "-",
         "library": library, "version": version, "vulnerable": vulnerable,
-        "confidence": confidence, "evidence": evidence,
+        "confidence": confidence,
+        "confidence_level": ("high" if "high-confidence" in str(confidence).lower() or "confirmed" in str(confidence).lower() else "medium" if "contextual" in str(confidence).lower() or "data-flow" in str(confidence).lower() or "wrapper" in str(confidence).lower() else "low"),
+        "evidence": evidence,
+        "evidence_detail": {"source": "static_analysis", "snippet": str(evidence)[:240], "location": location, "certainty": ("high" if "high-confidence" in str(confidence).lower() or "confirmed" in str(confidence).lower() else "medium" if "contextual" in str(confidence).lower() or "data-flow" in str(confidence).lower() or "wrapper" in str(confidence).lower() else "low")},
+        "detector_id": "sustum.static.crypto.v1",
         "notes": "Static indicator only; validate actual runtime use and configuration."
     }
 
@@ -276,7 +287,7 @@ def _strip_source_comments(content, ext):
         char = content[i]
         nxt = content[i + 1] if i + 1 < len(content) else ""
         if in_line:
-            if char == "\\n":
+            if char == "\n":
                 in_line = False
                 output.append(char)
             else:
@@ -289,7 +300,7 @@ def _strip_source_comments(content, ext):
                 in_block = False
                 i += 2
             else:
-                output.append("\\n" if char == "\\n" else " ")
+                output.append("\n" if char == "\n" else " ")
                 i += 1
             continue
         if quote:
@@ -352,10 +363,31 @@ def _scan_language_lines(content, rel_path, ext):
                 source_line)
             if match:
                 aliases[match.group(1) or match.group(2)] = match.group(2)
+        dot_imports = set()
+        for source_line in source_lines:
+            dot_match = re.search(r"""^(?:import\s+)?\.\s*["']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["']""", source_line.strip())
+            if dot_match:
+                dot_imports.add(dot_match.group(1))
     for line_no, raw_line in enumerate(source_lines, 1):
         line = raw_line
+        if ext == ".go" and dot_imports:
+            dot_api = {
+                "rsa": [
+                    (r"\bGenerateKey\s*\(", "RSA", "Key generation", True),
+                    (r"\b(?:SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(", "RSA", "Signature", True),
+                ],
+                "ecdsa": [(r"\bGenerateKey\s*\(", "ECDSA", "Key generation", True)],
+                "ecdh": [(r"\bX(?:25519|448)\s*\(", "ECDH", "Key establishment", True)],
+                "sha1": [(r"\bNew\s*\(", "SHA-1", "Hash", False)],
+                "sha256": [(r"\bNew\s*\(", "SHA-256", "Hash", False)],
+            }
+            for package in dot_imports:
+                for pattern, algorithm, purpose, vulnerable in dot_api[package]:
+                    if re.search(pattern, line):
+                        findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose, "High-confidence API call", line.strip()[:240], vulnerable))
+        line = raw_line
         for alias, canonical in aliases.items():
-            line = re.sub(r'\\b' + re.escape(alias) + r'\\s*\\.', canonical + ".", line)
+            line = re.sub(r'\b' + re.escape(alias) + r'\s*\.', canonical + ".", line)
         if not line.strip():
             continue
         for pattern, algorithm, purpose, vulnerable, confidence in patterns:
@@ -369,6 +401,27 @@ def _scan_language_lines(content, rel_path, ext):
             findings.append(_finding(f"{rel_path}:{line_no}", "PQC algorithm reference",
                 "PQC reference", "Textual indicator", pqc.group(0), False))
     return findings
+
+
+def _mask_non_python_strings(content):
+    """Mask quoted strings in code before broad textual matching, preserving offsets and lines."""
+    output = list(content)
+    quote = None
+    escaped = False
+    for index, char in enumerate(content):
+        if quote:
+            if char not in "\r\n":
+                output[index] = " "
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+        elif char in (chr(39), chr(34), chr(96)):
+            quote = char
+            output[index] = " "
+    return "".join(output)
 
 
 def _mask_python_strings_and_comments(content):
@@ -395,13 +448,18 @@ def scan_file(filepath, relative_path=None):
     rel_path = relative_path or os.path.basename(filepath)
     ext = os.path.splitext(filepath)[1].lower()
     try:
+        if os.path.islink(filepath):
+            return [_finding(f"{rel_path}:1", "Skipped symbolic link", "Scanner limitation", "Low-confidence diagnostic", "Symbolic links are not followed during scanning.", None, asset_type="Scanner diagnostic")]
+        file_size = os.path.getsize(filepath)
+        if file_size > MAX_SOURCE_FILE_BYTES:
+            return [_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {file_size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic")]
         with open(filepath, "r", encoding="utf-8-sig", errors="replace") as handle:
-            content = handle.read()
-        # Be defensive with archives containing a Unicode BOM character in the
-        # decoded text (including files where it is not the first byte).
+            content = handle.read(MAX_SOURCE_FILE_BYTES + 1)
+        if len(content.encode("utf-8", errors="replace")) > MAX_SOURCE_FILE_BYTES:
+            return [_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"Decoded content exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic")]
         content = content.lstrip("\ufeff")
-    except OSError:
-        return findings
+    except OSError as exc:
+        return [_finding(f"{rel_path}:1", "File read error", "Scanner limitation", "Low-confidence diagnostic", str(exc)[:240], None, asset_type="Scanner diagnostic")]
 
     if ext == ".py":
         try:
@@ -414,7 +472,13 @@ def scan_file(filepath, relative_path=None):
 
     findings.extend(_scan_language_lines(content, rel_path, ext))
     comment_free = _strip_source_comments(content, ext)
-    text_content = _mask_python_strings_and_comments(comment_free) if ext == '.py' else comment_free
+    code_extensions = {".js", ".jsx", ".ts", ".tsx", ".java", ".go", ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".hh"}
+    if ext == ".py":
+        text_content = _mask_python_strings_and_comments(comment_free)
+    elif ext in code_extensions:
+        text_content = _mask_non_python_strings(comment_free)
+    else:
+        text_content = comment_free
     for line_no, raw_line in enumerate(text_content.splitlines(), 1):
         line = raw_line
         if not line.strip():
@@ -457,11 +521,22 @@ def parse_package_json(filepath, rel_path):
     try:
         with open(filepath, encoding="utf-8") as handle:
             data = json.load(handle)
-    except (OSError, ValueError):
-        return []
+    except (OSError, ValueError) as exc:
+        return [_finding(rel_path, "package.json parse error", "Dependency inventory incomplete",
+                         "Low-confidence diagnostic", str(exc)[:240], None,
+                         asset_type="Scanner diagnostic")]
+    if not isinstance(data, dict):
+        return [_finding(rel_path, "Invalid package.json root", "Dependency inventory incomplete",
+                         "Low-confidence diagnostic", "package.json root must be a JSON object.", None,
+                         asset_type="Scanner diagnostic")]
     rows = []
     for group in ("dependencies", "devDependencies", "optionalDependencies"):
-        for name, version in (data.get(group) or {}).items():
+        entries = data.get(group) or {}
+        if not isinstance(entries, dict):
+            return [_finding(rel_path, "Invalid dependency section", "Dependency inventory incomplete",
+                             "Low-confidence diagnostic", f"{group} must be a JSON object.", None,
+                             asset_type="Scanner diagnostic")]
+        for name, version in entries.items():
             rows.append(_dependency(name, str(version), rel_path))
     return rows
 
@@ -509,13 +584,41 @@ def parse_go_mod(filepath, rel_path):
 
 
 def scan_directory(target_dir):
+    """Scan a directory with deterministic file-count and aggregate-byte budgets."""
     all_findings = []
-    root_abs = os.path.abspath(target_dir)
-    for current, dirs, files in os.walk(root_abs):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
-        for filename in files:
+    root_abs = os.path.realpath(target_dir)
+    scanned_files = 0
+    total_source_bytes = 0
+    scan_started = time.monotonic()
+    for current, dirs, files in os.walk(root_abs, followlinks=False):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(current, d))]
+        for filename in sorted(files):
             fullpath = os.path.join(current, filename)
+            if os.path.islink(fullpath):
+                continue
+            if time.monotonic() - scan_started > MAX_SCAN_SECONDS:
+                all_findings.append(_finding(".", "Scan time budget reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_SCAN_SECONDS} seconds.", None, asset_type="Scanner diagnostic"))
+                return all_findings
+            try:
+                if os.path.commonpath([root_abs, os.path.realpath(fullpath)]) != root_abs:
+                    continue
+                size = os.path.getsize(fullpath)
+            except (OSError, ValueError):
+                continue
+            if os.path.splitext(filename)[1].lower() not in SOURCE_EXTENSIONS and filename.lower() not in DEPENDENCY_FILES:
+                continue
             rel_path = os.path.relpath(fullpath, root_abs).replace(os.sep, "/")
+            scanned_files += 1
+            if scanned_files > MAX_SCAN_FILES:
+                all_findings.append(_finding(".", "Scan file-count limit reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_SCAN_FILES} candidate files.", None, asset_type="Scanner diagnostic"))
+                return all_findings
+            if size > MAX_SOURCE_FILE_BYTES:
+                all_findings.append(_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic"))
+                continue
+            total_source_bytes += size
+            if total_source_bytes > MAX_TOTAL_SOURCE_BYTES:
+                all_findings.append(_finding(".", "Scan byte budget reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_TOTAL_SOURCE_BYTES} bytes of candidate source and manifest data.", None, asset_type="Scanner diagnostic"))
+                return all_findings
             lower = filename.lower()
             if lower == "package.json":
                 all_findings.extend(parse_package_json(fullpath, rel_path))
