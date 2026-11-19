@@ -11,6 +11,10 @@ import os
 import re
 import tokenize
 
+MAX_SOURCE_FILE_BYTES = 5 * 1024 * 1024
+MAX_SCAN_FILES = 10000
+MAX_TOTAL_SOURCE_BYTES = 100 * 1024 * 1024
+
 from dependency_inventory import parse_manifest
 
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "venv", ".venv", "dist", "build", "target"}
@@ -93,7 +97,11 @@ def _finding(location, algorithm, purpose, confidence, evidence, vulnerable=None
         "location": location, "asset_type": asset_type, "algorithm": algorithm,
         "key_size": "Unknown", "purpose": purpose, "protocol": "-",
         "library": library, "version": version, "vulnerable": vulnerable,
-        "confidence": confidence, "evidence": evidence,
+        "confidence": confidence,
+        "confidence_level": ("high" if "high-confidence" in str(confidence).lower() or "confirmed" in str(confidence).lower() else "medium" if "contextual" in str(confidence).lower() or "data-flow" in str(confidence).lower() or "wrapper" in str(confidence).lower() else "low"),
+        "evidence": evidence,
+        "evidence_detail": {"source": "static_analysis", "snippet": str(evidence)[:240], "location": location, "certainty": ("high" if "high-confidence" in str(confidence).lower() or "confirmed" in str(confidence).lower() else "medium" if "contextual" in str(confidence).lower() or "data-flow" in str(confidence).lower() or "wrapper" in str(confidence).lower() else "low")},
+        "detector_id": "sustum.static.crypto.v1",
         "notes": "Static indicator only; validate actual runtime use and configuration."
     }
 
@@ -395,13 +403,18 @@ def scan_file(filepath, relative_path=None):
     rel_path = relative_path or os.path.basename(filepath)
     ext = os.path.splitext(filepath)[1].lower()
     try:
+        if os.path.islink(filepath):
+            return [_finding(f"{rel_path}:1", "Skipped symbolic link", "Scanner limitation", "Low-confidence diagnostic", "Symbolic links are not followed during scanning.", None, asset_type="Scanner diagnostic")]
+        file_size = os.path.getsize(filepath)
+        if file_size > MAX_SOURCE_FILE_BYTES:
+            return [_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"File size {file_size} exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic")]
         with open(filepath, "r", encoding="utf-8-sig", errors="replace") as handle:
-            content = handle.read()
-        # Be defensive with archives containing a Unicode BOM character in the
-        # decoded text (including files where it is not the first byte).
+            content = handle.read(MAX_SOURCE_FILE_BYTES + 1)
+        if len(content.encode("utf-8", errors="replace")) > MAX_SOURCE_FILE_BYTES:
+            return [_finding(f"{rel_path}:1", "File exceeds scan limit", "Scanner limitation", "Low-confidence diagnostic", f"Decoded content exceeds {MAX_SOURCE_FILE_BYTES} byte per-file limit.", None, asset_type="Scanner diagnostic")]
         content = content.lstrip("\ufeff")
-    except OSError:
-        return findings
+    except OSError as exc:
+        return [_finding(f"{rel_path}:1", "File read error", "Scanner limitation", "Low-confidence diagnostic", str(exc)[:240], None, asset_type="Scanner diagnostic")]
 
     if ext == ".py":
         try:
@@ -509,12 +522,33 @@ def parse_go_mod(filepath, rel_path):
 
 
 def scan_directory(target_dir):
+    """Scan a directory with deterministic file-count and aggregate-byte budgets."""
     all_findings = []
-    root_abs = os.path.abspath(target_dir)
-    for current, dirs, files in os.walk(root_abs):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
-        for filename in files:
+    root_abs = os.path.realpath(target_dir)
+    scanned_files = 0
+    total_source_bytes = 0
+    for current, dirs, files in os.walk(root_abs, followlinks=False):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not os.path.islink(os.path.join(current, d))]
+        for filename in sorted(files):
             fullpath = os.path.join(current, filename)
+            if os.path.islink(fullpath):
+                continue
+            try:
+                if os.path.commonpath([root_abs, os.path.realpath(fullpath)]) != root_abs:
+                    continue
+                size = os.path.getsize(fullpath)
+            except (OSError, ValueError):
+                continue
+            if os.path.splitext(filename)[1].lower() not in SOURCE_EXTENSIONS and filename.lower() not in DEPENDENCY_FILES:
+                continue
+            scanned_files += 1
+            if scanned_files > MAX_SCAN_FILES:
+                all_findings.append(_finding(".", "Scan file-count limit reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_SCAN_FILES} candidate files.", None, asset_type="Scanner diagnostic"))
+                return all_findings
+            total_source_bytes += size
+            if total_source_bytes > MAX_TOTAL_SOURCE_BYTES:
+                all_findings.append(_finding(".", "Scan byte budget reached", "Scanner limitation", "Low-confidence diagnostic", f"Scan stopped after {MAX_TOTAL_SOURCE_BYTES} bytes of candidate source and manifest data.", None, asset_type="Scanner diagnostic"))
+                return all_findings
             rel_path = os.path.relpath(fullpath, root_abs).replace(os.sep, "/")
             lower = filename.lower()
             if lower == "package.json":
