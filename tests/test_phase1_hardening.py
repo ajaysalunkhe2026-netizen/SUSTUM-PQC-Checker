@@ -56,7 +56,8 @@ class ScannerRegressionTests(unittest.TestCase):
             'import . "crypto/rsa"\nGenerateKey(rand.Reader, 2048)\n',
             ".go",
         )
-        self.assertTrue(any(x["algorithm"] == "RSA" for x in findings))
+        rsa = next(x for x in findings if x["algorithm"] == "RSA")
+        self.assertEqual(rsa["purpose"], "Key generation")
 
     def test_openssl_provider_rsa_context_is_detected(self):
         findings = self._scan(
