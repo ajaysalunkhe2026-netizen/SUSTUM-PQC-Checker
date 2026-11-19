@@ -370,16 +370,19 @@ def _scan_language_lines(content, rel_path, ext):
         line = raw_line
         if ext == ".go" and dot_imports:
             dot_api = {
-                "rsa": (r"\b(?:GenerateKey|SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(", "RSA", "Cryptographic API operation"),
-                "ecdsa": (r"\bGenerateKey\s*\(", "ECDSA", "Key generation"),
-                "ecdh": (r"\bX(?:25519|448)\s*\(", "ECDH", "Key establishment"),
-                "sha1": (r"\bNew\s*\(", "SHA-1", "Hash"),
-                "sha256": (r"\bNew\s*\(", "SHA-256", "Hash"),
+                "rsa": [
+                    (r"\bGenerateKey\s*\(", "RSA", "Key generation", True),
+                    (r"\b(?:SignPSS|SignPKCS1v15|VerifyPSS|VerifyPKCS1v15)\s*\(", "RSA", "Signature", True),
+                ],
+                "ecdsa": [(r"\bGenerateKey\s*\(", "ECDSA", "Key generation", True)],
+                "ecdh": [(r"\bX(?:25519|448)\s*\(", "ECDH", "Key establishment", True)],
+                "sha1": [(r"\bNew\s*\(", "SHA-1", "Hash", False)],
+                "sha256": [(r"\bNew\s*\(", "SHA-256", "Hash", False)],
             }
             for package in dot_imports:
-                pattern, algorithm, purpose = dot_api[package]
-                if re.search(pattern, line):
-                    findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose, "High-confidence API call", line.strip()[:240], algorithm in {"RSA", "ECDSA", "ECDH"}))
+                for pattern, algorithm, purpose, vulnerable in dot_api[package]:
+                    if re.search(pattern, line):
+                        findings.append(_finding(f"{rel_path}:{line_no}", algorithm, purpose, "High-confidence API call", line.strip()[:240], vulnerable))
         line = raw_line
         for alias, canonical in aliases.items():
             line = re.sub(r'\b' + re.escape(alias) + r'\s*\.', canonical + ".", line)
