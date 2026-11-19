@@ -363,7 +363,7 @@ def _scan_language_lines(content, rel_path, ext):
                 aliases[match.group(1) or match.group(2)] = match.group(2)
         dot_imports = set()
         for source_line in source_lines:
-            dot_match = re.search(r"""^\s*\.\s*["']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["']""", source_line.strip())
+            dot_match = re.search(r"""^(?:import\s+)?\.\s*["']crypto/(rsa|ecdsa|ecdh|sha1|sha256)["']""", source_line.strip())
             if dot_match:
                 dot_imports.add(dot_match.group(1))
     for line_no, raw_line in enumerate(source_lines, 1):
