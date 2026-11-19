@@ -1,7 +1,8 @@
 import type {Dependency,Diagnostic,Finding} from "./model";
 const rules:{re:RegExp;algorithm:string;family:string;primitive:Finding["primitive"];purpose:string;vulnerable:boolean|null;confidence:Finding["confidence"]}[]=[
- {re:/\b(?:KeyPairGenerator\s*\.\s*getInstance\s*\(\s*["']RSA|generateKeyPair(?:Sync)?\s*\(\s*["']rsa|rsa\s*\.\s*GenerateKey\s*\(|RSA_generate_key_ex\s*\()/g,algorithm:"RSA",family:"RSA",primitive:"pke",purpose:"Asymmetric key generation/use",vulnerable:true,confidence:"high"},
- {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["'][^"']*ECDSA|createSign\s*\(|ecdsa\s*\.\s*Sign)/g,algorithm:"ECDSA",family:"ECDSA",primitive:"signature",purpose:"Digital signature",vulnerable:true,confidence:"medium"},
+ {re:/\b(?:KeyPairGenerator\s*\.\s*getInstance\s*\(\s*["']RSA|generateKeyPair(?:Sync)?\s*\(\s*["']rsa|rsa\s*\.\s*GenerateKey\s*\(|RSA_generate_key_ex\s*\()/g,algorithm:"RSA",family:"RSA",primitive:"unknown",purpose:"RSA key generation (actual use undetermined)",vulnerable:true,confidence:"high"},
+ {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["'][^"']*ECDSA|ecdsa\s*\.\s*Sign)/g,algorithm:"ECDSA",family:"ECDSA",primitive:"signature",purpose:"Digital signature",vulnerable:true,confidence:"medium"},
+ {re:/\bcreateSign\s*\(/g,algorithm:"Signature operation",family:"unknown",primitive:"signature",purpose:"Signature operation (algorithm undetermined)",vulnerable:null,confidence:"low"},
  {re:/\b(?:KeyAgreement\s*\.\s*getInstance\s*\(\s*["']ECDH|createECDH\s*\(|ecdh\s*\.\s*X(?:25519|448)\s*\()/g,algorithm:"ECDH",family:"ECDH",primitive:"key-agree",purpose:"Key establishment",vulnerable:true,confidence:"medium"},
  {re:/\b(?:MessageDigest\s*\.\s*getInstance\s*\(\s*["']SHA-?1|sha1\s*\.\s*New\s*\()/g,algorithm:"SHA-1",family:"SHA",primitive:"hash",purpose:"Hash",vulnerable:false,confidence:"medium"}
 ];
