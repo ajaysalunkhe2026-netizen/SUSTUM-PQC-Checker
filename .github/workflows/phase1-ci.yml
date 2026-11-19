@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/phase1-engine-stabilization
+      - fix/phase1-final
   pull_request:
     branches:
       - feature/reliable-pqc-cbom
