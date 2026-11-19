@@ -28,6 +28,30 @@ export function maskComments(source:string,ext:string):string{
  }
  return chars.join("");
 }
+/** Return false when a regex hit begins inside a quoted literal. This is deliberately
+ * conservative: template-string interpolation is not parsed as executable code. */
+function isCodeOffset(source:string,offset:number,ext:string):boolean{
+ const python=ext===".py";let i=0,state:"code"|"single"|"double"|"template"|"triple-single"|"triple-double"="code";
+ while(i<offset){
+  const c=source[i],n=source[i+1],third=source[i+2];
+  if(state==="single"||state==="double"||state==="template"){
+   const end=state==="single"?"'":state==="double"?'"':"`";
+   if(c==="\\\\"){i+=2;continue;}if(c===end)state="code";i++;continue;
+  }
+  if(state==="triple-single"||state==="triple-double"){
+   const end=state==="triple-single"?"'''":'"""';
+   if(source.slice(i,i+3)===end){state="code";i+=3;continue;}
+   if(c==="\\\\"){i+=2;continue;}i++;continue;
+  }
+  if(python&&source.slice(i,i+3)==="'''"){state="triple-single";i+=3;continue;}
+  if(python&&source.slice(i,i+3)==='"""'){state="triple-double";i+=3;continue;}
+  if(c==="'"){state="single";i++;continue;}
+  if(c==='"'){state="double";i++;continue;}
+  if(!python&&c==="`"){state="template";i++;continue;}
+  i++;
+ }
+ return state==="code";
+}
 export function parseManifest(path:string,s:string,deps:Dependency[],diag:Diagnostic[]):void{
  const name=path.split("/").pop()||"";
  if(name==="package.json"){try{const j=JSON.parse(s);if(!j||typeof j!=="object"||Array.isArray(j))throw new Error("Expected JSON object");for(const [group,scope] of [["dependencies","runtime"],["devDependencies","development"],["optionalDependencies","optional"]] as const){const obj=j[group];if(obj&&typeof obj==="object"&&!Array.isArray(obj))for(const [n,v] of Object.entries(obj))deps.push({name:n,version:typeof v==="string"?v:"unspecified",ecosystem:"npm",scope,source:path,evidence:"declared"});}}catch{diag.push({code:"MANIFEST_JSON",message:"Invalid package.json; dependency inventory is incomplete.",file:path});}}
@@ -36,5 +60,5 @@ export function parseManifest(path:string,s:string,deps:Dependency[],diag:Diagno
 }
 export function scanSource(path:string,s:string,out:Finding[]):void{
  const ext=path.slice(path.lastIndexOf(".")).toLowerCase(),masked=maskComments(s,ext);
- for(const rule of rules){rule.re.lastIndex=0;let m:RegExpExecArray|null;while((m=rule.re.exec(masked))!==null){const line=masked.slice(0,m.index).split("\n").length,id=path+":"+line+":"+rule.algorithm+":"+rule.purpose;if(out.some(x=>x.id===id))continue;out.push({id,algorithm:rule.algorithm,family:rule.family,primitive:rule.primitive,purpose:rule.purpose,file:path,line,evidence:m[0].slice(0,240),confidence:rule.confidence,quantumVulnerable:rule.vulnerable,recommendation:rule.algorithm==="RSA"?"Review actual usage before choosing a PQC replacement.":rule.algorithm==="ECDSA"?"Evaluate ML-DSA with protocol and interoperability constraints.":rule.algorithm==="ECDH"?"Evaluate ML-KEM and approved hybrid transition design.":"Review hash usage and protocol context."});}}
+ for(const rule of rules){rule.re.lastIndex=0;let m:RegExpExecArray|null;while((m=rule.re.exec(masked))!==null){if(!isCodeOffset(masked,m.index,ext))continue;const line=masked.slice(0,m.index).split("\n").length,id=path+":"+line+":"+rule.algorithm+":"+rule.purpose;if(out.some(x=>x.id===id))continue;out.push({id,algorithm:rule.algorithm,family:rule.family,primitive:rule.primitive,purpose:rule.purpose,file:path,line,evidence:m[0].slice(0,240),confidence:rule.confidence,quantumVulnerable:rule.vulnerable,recommendation:rule.algorithm==="RSA"?"Review actual usage before choosing a PQC replacement.":rule.algorithm==="ECDSA"?"Evaluate ML-DSA with protocol and interoperability constraints.":rule.algorithm==="ECDH"?"Evaluate ML-KEM and approved hybrid transition design.":"Review hash usage and protocol context."});}}
 }
