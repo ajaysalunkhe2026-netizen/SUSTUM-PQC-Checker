@@ -6,7 +6,7 @@ type ScanMessage={type:"scan";buffer:ArrayBuffer};
 type ZipEntry=JSZip.JSZipObject & {unsafeOriginalName?:string;_data?:{uncompressedSize?:number;compressedSize?:number}};
 const worker=self as unknown as DedicatedWorkerGlobalScope;
 const MAX_ARCHIVE=100*1024*1024,MAX_ENTRIES=5000,MAX_CANDIDATES=2000,MAX_FILE=2*1024*1024,MAX_TOTAL=50*1024*1024,MAX_SCAN_MS=30000,MAX_RATIO=200;
-const sourceExt=new Set([".py",".js",".jsx",".ts",".tsx",".java",".go",".c",".h",".cpp",".cc"]);
+const sourceExt=new Set([".py",".js",".jsx",".ts",".tsx",".java",".go",".c",".h",".cpp",".cc",".hpp",".hh",".rs",".cs",".php",".rb",".swift",".kt",".scala"]);
 const manifests=new Set(["package.json","requirements.txt","go.mod"]);
 worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
  if(event.data.type!=="scan")return;
