@@ -1,0 +1,38 @@
+name: Phase 1 Stabilization CI
+
+on:
+  push:
+    branches:
+      - fix/phase1-engine-stabilization
+  pull_request:
+    branches:
+      - feature/reliable-pqc-cbom
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Compile Python modules
+        run: python -m compileall -q .
+      - name: Run unit and API tests
+        run: python -m unittest discover -s tests -v
+      - name: Evaluate hand-authored regression corpus
+        run: python tests/evaluate_detection.py
+      - name: Evaluate source-backed real-world corpus
+        run: python tests/evaluate_real_world.py
