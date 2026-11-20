@@ -1,0 +1,61 @@
+name: Generate browser package lockfile
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "Development branch to update"
+        required: true
+        default: "stage2-4-browser-native-clean"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-lockfile-${{ inputs.target_branch }}
+  cancel-in-progress: false
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Validate target branch
+        env:
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          test "$TARGET_BRANCH" = "stage2-4-browser-native-clean"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package.json
+
+      - name: Generate lockfile from the committed manifest
+        working-directory: web
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify lockfile is in sync
+        working-directory: web
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Commit lockfile to the development branch
+        env:
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          if git diff --quiet -- web/package-lock.json; then
+            echo "package-lock.json is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/package-lock.json
+          git commit -m "chore(web): add reproducible npm lockfile"
+          git push origin "HEAD:$TARGET_BRANCH"
