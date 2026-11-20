@@ -1,39 +1,35 @@
-# 🛡️ SUSTUM PQC Checker (Post-Quantum Cryptography & CBOM Engine)
-**Created by:** [AJAY SALUNKHE]
+# SUSTUM PQC Checker
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
-![Flask](https://img.shields.io/badge/Framework-Flask-green.svg)
-![Compliance](https://img.shields.io/badge/Compliance-NIST%20%7C%20CNSA%202.0-orange.svg)
-![License](https://img.shields.io/badge/License-MIT-purple.svg)
+Independent lab work by Ajay Salunkhe.
 
-## 📌 Executive Summary
-With the finalization of NIST FIPS 203, 204, and 205, enterprises are facing the largest cryptographic migration in history. Legacy algorithms (RSA, ECDSA) are vulnerable to Quantum threats (Shor's Algorithm). 
+Static indicators in source and dependency manifests → advisory mapping → CycloneDX-formatted JSON candidate.
 
-SUSTUM PQC Checker is an enterprise-grade Static Application Security Testing (SAST) engine designed to audit codebases, detect legacy cryptography, and map out a migration strategy with Zero-False-Positive AST parsing and CycloneDX CBOM (Cryptographic Bill of Materials) generation.
+Not an estate inventory. Not a compliance certificate. Not a production security product.
 
----
+## Repository branch notice
 
-## 🚀 Architectural Capabilities
+The GitHub default branch is currently `main`, which contains an older implementation and is not the maintained prototype baseline.
 
-1. 🧠 Zero-Drift AST Engine: Uses Python's Abstract Syntax Tree (AST) to strictly analyze cryptographic function calls, completely ignoring comments and dead code.
-2. 📦 Supply Chain & CBOM Export: Parses dependency manifests to generate a fully compliant CycloneDX JSON file.
-3. 📊 Payload Growth Impact: Calculates network size differences (e.g., RSA's 256 bytes vs. ML-DSA's 3,309 bytes) to aid architectural network planning.
+The current development source of truth is **`stage2-4-browser-native-clean`**. Switch to that branch before following its implementation documentation:
 
----
+```bash
+git clone --branch stage2-4-browser-native-clean https://github.com/ajaysalunkhe2026-netizen/SUSTUM-PQC-Checker.git
+cd SUSTUM-PQC-Checker
+```
 
-## ⚙️ Quick Start Guide
+Do not interpret this legacy `main` branch as having the feature set documented on the development branch. The browser-native candidate is documented in [web/README.md](web/README.md); the Python/Flask prototype and its limits are documented in the development-branch [README.md](https://github.com/ajaysalunkhe2026-netizen/SUSTUM-PQC-Checker/blob/stage2-4-browser-native-clean/README.md).
 
-### Installation
-1. Clone the repository and install dependencies:
-pip install -r requirements.txt
+## What this project is
 
-### Running the Engine
-1. Start the Flask backend server:
-python app.py
+A lab-oriented static-analysis prototype. It looks for selected cryptography-related indicators in source code and dependency manifests and maps those indicators to advisory information. Output is an inventory candidate, not proof that an algorithm is reachable or used at runtime.
 
-2. Run the automated test script to generate a dummy repository and trigger the audit:
-python run_test.py
+## Important limitations
 
-*Your default web browser will automatically open the generated report.html executive dashboard.*
----
-**Author:** [AJAY SALUNKHE] | Built for the Post-Quantum Era.
+- Detection is heuristic and incomplete. No findings does not mean no cryptography exists.
+- Dependency declarations are inventory evidence, not proof of cryptographic use or a fully resolved dependency graph.
+- Runtime behavior, binaries, live TLS traffic, remote services, HSMs, certificate stores and runtime-loaded keys are outside the stated scan scope.
+- Recommendations are advisory and require human review of protocol, implementation, interoperability, vendor and policy context.
+- CycloneDX-formatted output is a candidate inventory artifact; its presence does not establish complete CBOM coverage or compliance.
+- This repository does not claim production suitability, security certification, or zero false positives.
+
+For the maintained scope and detailed caveats, use the development-branch README linked above.
