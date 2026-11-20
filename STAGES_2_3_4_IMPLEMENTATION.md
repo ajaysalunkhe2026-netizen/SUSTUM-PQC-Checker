@@ -7,8 +7,13 @@ Branch: `stage2-4-browser-native-clean`. Pull request: #5. Base: `fix/phase1-fin
 - Separate Vite + TypeScript static application; scanning does not call Flask `/scan` and does not upload the selected archive.
 - ZIP work runs in a dedicated Web Worker. The UI reports progress and permits cancellation by terminating the worker.
 - Resource limits: 100 MiB archive, 5,000 total entries, 2,000 candidate files, 2 MiB per candidate file, 50 MiB aggregate candidate bytes, and 30-second elapsed checks before and after extraction operations.
-- Declared uncompressed sizes and suspicious compression ratios are checked before extracting candidate files; actual extracted sizes are checked again.
+- The UI rejects archives above 100 MiB using `File.size` before reading the archive into an `ArrayBuffer`. File selection is locked during an active scan and restored on cancellation/completion.
+- Declared uncompressed sizes and suspicious compression ratios are checked before extracting candidate files; missing/invalid size metadata is rejected; actual extracted sizes are checked again.
+- Directory entries receive path normalization, traversal and duplicate checks before being skipped.
 - Rejects absolute paths, Windows drive paths, traversal, malformed path segments, duplicate normalized paths and Unix symlinks.
+- RSA key generation remains primitive-undetermined until use is known; SHA-1 quantum impact is represented as unknown. Node `createHash("sha1")` is now an indicator.
+- Multiple same-line occurrences are retained as separate findings.
+- npm and Python version constraints are kept separate from resolved versions; requirements parsing handles common specifiers, extras, markers and direct references while surfacing unsupported pip directives.
 - Detection and manifest coverage remain intentionally narrow. This is not feature parity with the Python scanner and is not a full language parser.
 
 ## Phase 3 — CBOM model and evidence
@@ -32,7 +37,7 @@ Branch: `stage2-4-browser-native-clean`. Pull request: #5. Base: `fix/phase1-fin
 
 The owner asked to defer testing until the final pass. No tests, build, browser runtime checks or schema validation have been run by this implementation pass. Do not treat implementation as verified or production-ready until the following are completed:
 
-- Run `npm test` and `npm run build` on this exact branch.
+- Run `npm test` and `npm run build` on this exact branch (regression tests were added for the latest hardening but have not been executed).
 - Validate generated CBOM against the official CycloneDX 1.6 JSON Schema and at least one independent consumer.
 - Expand scanner accuracy testing against frozen and held-out source corpora; report precision/recall per supported language and keep ambiguous cases separate.
 - Test malformed/hostile ZIPs, cancellation during extraction, resource exhaustion, browser compatibility, accessibility and CSP.
