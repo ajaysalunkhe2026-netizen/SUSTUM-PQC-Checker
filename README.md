@@ -97,7 +97,7 @@ The first evaluator uses a hand-authored smoke corpus. The second evaluates 61 c
 
 The current branch is a development branch. Passing local tests will demonstrate only that the included test cases pass; it will not establish detection accuracy, schema compliance, or suitability for production use.
 
-## Industry-grade CBOM engineering status
+## CBOM engineering roadmap status
 
 An architecture audit and phased delivery/acceptance plan is recorded in [INDUSTRY_GRADE_ROADMAP.md](INDUSTRY_GRADE_ROADMAP.md). A reviewer protocol and reproduction guide is in [INDEPENDENT_VALIDATION_HANDOFF.md](INDEPENDENT_VALIDATION_HANDOFF.md). This is a pre-release validation candidate, not a complete dependency resolver or an independently validated CBOM product.
 
