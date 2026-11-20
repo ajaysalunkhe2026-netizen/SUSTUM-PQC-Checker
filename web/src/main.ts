@@ -26,6 +26,7 @@ const cancelButton=$<HTMLButtonElement>("cancel");
 const status=$<HTMLParagraphElement>("status");
 let activeWorker:Worker|null=null;
 let latest:ScanResult|null=null;
+let latestProjectName="project";
 const findingSearch=$<HTMLInputElement>("finding-search");
 const confidenceFilter=$<HTMLSelectElement>("confidence-filter");
 const algorithmFilter=$<HTMLSelectElement>("algorithm-filter");
@@ -34,6 +35,9 @@ confidenceFilter.addEventListener("change",()=>{if(latest)renderFindings(latest)
 algorithmFilter.addEventListener("change",()=>{if(latest)renderFindings(latest);});
 
 input.addEventListener("change",()=>{
+ if(activeWorker){activeWorker.terminate();activeWorker=null;}
+ input.disabled=false;
+ cancelButton.disabled=true;
  latest=null;
  $("results").hidden=true;
  scanButton.disabled=!input.files?.length||!!activeWorker;
@@ -50,18 +54,21 @@ cancelButton.addEventListener("click",()=>{
 scanButton.addEventListener("click",async()=>{
  const file=input.files?.[0];
  if(!file||activeWorker)return;
+ if(file.size>100*1024*1024){status.textContent="Archive exceeds 100 MiB. Choose a smaller ZIP before it is read into memory.";return;}
  if(!file.name.toLowerCase().endsWith(".zip")){
   status.textContent="Please select a .zip archive.";
   return;
  }
  scanButton.disabled=true;
+ input.disabled=true;
  cancelButton.disabled=false;
  latest=null;
+ latestProjectName=file.name;
  $("results").hidden=true;
  status.textContent="Reading archive locally…";
  let worker:Worker;
  try{worker=new Worker(new URL("./scanner.worker.ts",import.meta.url),{type:"module"});}
- catch(error){scanButton.disabled=!input.files?.length;cancelButton.disabled=true;status.textContent="Unable to start the local scanner worker: "+String(error);return;}
+ catch(error){input.disabled=false;scanButton.disabled=!input.files?.length;cancelButton.disabled=true;status.textContent="Unable to start the local scanner worker: "+String(error);return;}
  activeWorker=worker;
  worker.onmessage=(event:MessageEvent)=>{
   if(activeWorker!==worker)return;
@@ -72,6 +79,7 @@ scanButton.addEventListener("click",async()=>{
   activeWorker=null;
   worker.terminate();
   cancelButton.disabled=true;
+  input.disabled=false;
   scanButton.disabled=!input.files?.length;
   if(event.data.type==="error"){
    status.textContent="Scan failed: "+String(event.data.message);
@@ -85,6 +93,7 @@ scanButton.addEventListener("click",async()=>{
   if(activeWorker!==worker)return;
   activeWorker=null;
   worker.terminate();
+  input.disabled=false;
   cancelButton.disabled=true;
   scanButton.disabled=!input.files?.length;
   status.textContent="Worker failed. No archive was uploaded.";
@@ -92,11 +101,13 @@ scanButton.addEventListener("click",async()=>{
  try{
   const buffer=await file.arrayBuffer();
   if(activeWorker!==worker)return;
+  if(input.files?.[0]!==file){activeWorker=null;worker.terminate();input.disabled=false;cancelButton.disabled=true;scanButton.disabled=!input.files?.length;status.textContent="Selected archive changed; scan discarded.";return;}
   worker.postMessage({type:"scan",buffer},[buffer]);
  }catch(error){
   if(activeWorker!==worker)return;
   activeWorker=null;
   worker.terminate();
+  input.disabled=false;
   cancelButton.disabled=true;
   scanButton.disabled=!input.files?.length;
   status.textContent="Unable to read archive: "+String(error);
@@ -161,7 +172,7 @@ function download(name:string,data:string,type:string):void{
 $("cbom").addEventListener("click",async()=>{
  if(!latest)return;
  try{
-  const bom=await buildCbom(latest,input.files?.[0]?.name??"project");
+  const bom=await buildCbom(latest,latestProjectName);
   const errors=validateCbom(bom);
   if(errors.length){$("cbom-status").textContent="CBOM internal validation failed: "+errors.join(" ");return;}
   $("cbom-status").textContent="Internal structure and reference checks passed. Official schema and independent-consumer validation remain separate release gates.";
