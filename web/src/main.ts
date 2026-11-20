@@ -47,6 +47,7 @@ cancelButton.addEventListener("click",()=>{
  if(!activeWorker)return;
  activeWorker.terminate();
  activeWorker=null;
+ input.disabled=false;
  scanButton.disabled=!input.files?.length;
  cancelButton.disabled=true;
  status.textContent="Scan cancelled. The archive was not uploaded.";
@@ -126,7 +127,7 @@ function render(result:ScanResult):void{
  deps.replaceChildren();
  for(const dependency of result.dependencies){
   const tr=document.createElement("tr");
-  for(const value of [dependency.name,dependency.version,dependency.ecosystem,dependency.scope,dependency.source]){
+  for(const value of [dependency.name,dependency.versionConstraint?dependency.version+" · "+dependency.versionConstraint:dependency.version,dependency.ecosystem,dependency.scope,dependency.source]){
    const td=document.createElement("td");
    td.textContent=value;
    tr.append(td);
