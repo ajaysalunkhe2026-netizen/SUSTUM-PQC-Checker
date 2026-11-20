@@ -40,7 +40,7 @@ export function parseManifest(path:string,s:string,deps:Dependency[],diag:Diagno
 }
 export function scanSource(path:string,s:string,out:Finding[]):void{
  const dot=path.lastIndexOf("."),ext=dot>=0?path.slice(dot).toLowerCase():"",masked=maskComments(s,ext);
- for(const rule of rules){rule.re.lastIndex=0;let m:RegExpExecArray|null;while((m=rule.re.exec(masked))!==null){if(!isCodeOffset(masked,m.index,ext))continue;const line=masked.slice(0,m.index).split("\n").length,id=path+":"+line+":"+rule.algorithm+":"+rule.purpose;if(out.some(x=>x.id===id))continue;
+ for(const rule of rules){rule.re.lastIndex=0;let m:RegExpExecArray|null;while((m=rule.re.exec(masked))!==null){if(!isCodeOffset(masked,m.index,ext))continue;const line=masked.slice(0,m.index).split("\n").length,id=path+":"+line+":"+rule.algorithm+":"+rule.purpose+":"+m.index;if(out.some(x=>x.id===id))continue;
   const recommendation=rule.algorithm==="RSA"?"Review actual usage, key sizes and protocol context before selecting a PQC replacement.":rule.algorithm==="ECDSA"?"Assess ML-DSA with protocol, certificate and interoperability constraints.":rule.algorithm==="ECDH"?"Assess ML-KEM and an approved hybrid transition design.":rule.algorithm==="SHA-1"?"Determine whether SHA-1 is used for security-sensitive signatures, certificates, integrity or only legacy/non-security purposes.":"Identify the concrete signing algorithm and call path before classifying this indicator.";
   out.push({id,algorithm:rule.algorithm,family:rule.family,primitive:rule.primitive,purpose:rule.purpose,file:path,line,evidence:m[0].slice(0,240),confidence:rule.confidence,quantumVulnerable:rule.vulnerable,recommendation});
  }}
