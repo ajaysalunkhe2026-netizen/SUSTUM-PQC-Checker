@@ -283,7 +283,7 @@ def render_report(name, guideline, items, decision, reason, impact_data):
           <th>Algorithm Type</th>
           <th>Public Key Size</th>
           <th>Signature / Ciphertext Size</th>
-          <th>Quantum Safe</th>
+          <th>Quantum-safety indicator (heuristic)</th>
         </tr>
 """
     for m in impact_data.get('size_metrics', []):
