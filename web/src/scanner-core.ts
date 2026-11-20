@@ -5,7 +5,11 @@ const rules:Rule[]=[
  {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["'][^"']*ECDSA|ecdsa\s*\.\s*Sign|ec\s*\.\s*ECDSA\s*\()/g,algorithm:"ECDSA",family:"ECDSA",primitive:"signature",purpose:"Digital signature",vulnerable:true,confidence:"medium"},
  {re:/\bcreateSign\s*\(/g,algorithm:"Signature operation",family:"unknown",primitive:"signature",purpose:"Signature operation (algorithm undetermined)",vulnerable:null,confidence:"low"},
  {re:/\b(?:KeyAgreement\s*\.\s*getInstance\s*\(\s*["']ECDH|createECDH\s*\(|ecdh\s*\.\s*X(?:25519|448)\s*\(|ec\s*\.\s*ECDH\s*\()/g,algorithm:"ECDH",family:"ECDH",primitive:"key-agree",purpose:"Key establishment",vulnerable:true,confidence:"medium"},
- {re:/\b(?:MessageDigest\s*\.\s*getInstance\s*\(\s*["']SHA-?1|sha1\s*\.\s*New\s*\(|hashlib\s*\.\s*sha1\s*\(|hashes\s*\.\s*SHA1\s*\(|createHash\s*\(\s*["']sha-?1/g,algorithm:"SHA-1",family:"SHA",primitive:"hash",purpose:"Hash",vulnerable:null,confidence:"medium"}
+ {re:/\b(?:MessageDigest\s*\.\s*getInstance\s*\(\s*["']SHA-?1|sha1\s*\.\s*New\s*\(|hashlib\s*\.\s*sha1\s*\(|hashes\s*\.\s*SHA1\s*\(|createHash\s*\(\s*["']sha-?1/g,algorithm:"SHA-1",family:"SHA",primitive:"hash",purpose:"Hash",vulnerable:null,confidence:"medium"},
+
+ {re:/\b(?:KEM\s*\.\s*getInstance\s*\(\s*["']ML-KEM(?:-512|-768|-1024)?|KeyEncapsulation\s*\(\s*["']ML-KEM(?:-512|-768|-1024)?|mlkem(?:512|768|1024)?\s*\.|ML-KEM-(?:512|768|1024)|OQS_KEM_alg_ml_kem_(?:512|768|1024))/gi,algorithm:"ML-KEM",family:"ML-KEM",primitive:"key-agree",purpose:"Post-quantum key-encapsulation indicator; deployment context undetermined",vulnerable:null,confidence:"medium"},
+ {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["']ML-DSA(?:-44|-65|-87)?|Signature\s*\(\s*["']ML-DSA(?:-44|-65|-87)?|mldsa(?:44|65|87)?\s*\.|ML-DSA-(?:44|65|87)|OQS_SIG_alg_ml_dsa_(?:44|65|87))/gi,algorithm:"ML-DSA",family:"ML-DSA",primitive:"signature",purpose:"Post-quantum digital-signature indicator; deployment context undetermined",vulnerable:null,confidence:"medium"},
+ {re:/\b(?:Signature\s*\.\s*getInstance\s*\(\s*["']SLH-DSA(?:-[A-Za-z0-9-]+)?|Signature\s*\(\s*["']SLH-DSA(?:-[A-Za-z0-9-]+)?|slh_dsa_(?:sha2|shake)_[0-9]+[fs]|SLH-DSA-[A-Za-z0-9-]+)/gi,algorithm:"SLH-DSA",family:"SLH-DSA",primitive:"signature",purpose:"Post-quantum stateless hash-based signature indicator; deployment context undetermined",vulnerable:null,confidence:"medium"},
 ];
 const TICK=String.fromCharCode(96);
 export function maskComments(source:string,ext:string):string{
