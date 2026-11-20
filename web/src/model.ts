@@ -24,7 +24,7 @@ export async function buildCbom(scan:ScanResult,project:string):Promise<Bom>{
    property("sustum:recommendation",f.recommendation.slice(0,500))
   ]});
  }
- const deps=[...scan.dependencies].sort((a,b)=>[a.ecosystem,a.name,a.version,a.source,a.scope].join("|").localeCompare([b.ecosystem,b.name,b.version,b.source,b.scope].join("|")));
+ const deps=[...scan.dependencies].sort((a,b)=>[a.ecosystem,a.name,a.version,a.versionConstraint??"",a.source,a.scope].join("|").localeCompare([b.ecosystem,b.name,b.version,b.versionConstraint??"",b.source,b.scope].join("|")));
  for(const d of deps){
   const ref="urn:sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.versionConstraint??"",d.source,d.scope].join("|"));if(seen.has(ref))continue;seen.add(ref);dependsOn.push(ref);
   const c:BomComponent={type:"library",name:d.name,"bom-ref":ref,properties:[
@@ -55,7 +55,7 @@ export function validateCbom(bom:Bom):string[]{
   seen.add(ref);all.add(ref);
   if(!c.name||!c.type)errors.push("Component is missing type or name.");
   if(c.type==="cryptographic-asset"){
-   if(!c.cryptoProperties||c.cryptoProperties.assetType!=="algorithm")errors.push("Cryptographic asset is missing valid cryptoProperties.");
+   if(!c.cryptoProperties||c.cryptoProperties.assetType!=="algorithm"||!c.cryptoProperties.algorithmProperties)errors.push("Cryptographic asset is missing valid cryptoProperties.");
    else if(!["signature","pke","key-agree","hash","unknown"].includes(c.cryptoProperties.algorithmProperties.primitive))errors.push("Unsupported cryptographic primitive.");
   }
  }
