@@ -169,7 +169,7 @@ def render_report(name, guideline, items, decision, reason, impact_data):
   <div class="container">
     <div class="top-header">
       <div>
-        <h1>SUSTUM PQC Checker — Enterprise Report</h1>
+        <h1>SUSTUM PQC Checker — Static inventory report (prototype)</h1>
       </div>
       <div class="meta-info">
         Part: <b>{name}</b> | Guideline: <b>{guideline.upper()}</b> | Decision: <span style="color: {decision_color}; font-weight:700;">{decision}</span>
@@ -186,7 +186,7 @@ def render_report(name, guideline, items, decision, reason, impact_data):
         <div class="value" style="color: #dc2626;">{vulnerable_count}</div>
       </div>
       <div class="metric-card">
-        <div class="label">Already Safe</div>
+        <div class="label">Not flagged vulnerable</div>
         <div class="value" style="color: #16a34a;">{safe_count}</div>
       </div>
       <div class="metric-card">
