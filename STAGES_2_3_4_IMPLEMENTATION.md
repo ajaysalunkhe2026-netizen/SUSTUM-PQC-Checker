@@ -37,7 +37,7 @@ Branch: `stage2-4-browser-native-clean`. Pull request: #5. Base: `fix/phase1-fin
 
 The owner asked to defer testing until the final pass. No tests, build, browser runtime checks or schema validation have been run by this implementation pass. Do not treat implementation as verified or production-ready until the following are completed:
 
-- Run `npm test` and `npm run build` on this exact branch (regression tests were added for the latest hardening but have not been executed).
+- Run `npm test` and `npm run build` on this exact branch (regression tests were added for the latest hardening). Recent GitHub Actions runs were created with a failed conclusion, but the available workflow-run inspection returned zero jobs, so the failure cause could not be established. Treat CI as unresolved, not passed.
 - Validate generated CBOM against the official CycloneDX 1.6 JSON Schema and at least one independent consumer.
 - Expand scanner accuracy testing against frozen and held-out source corpora; report precision/recall per supported language and keep ambiguous cases separate.
 - Test malformed/hostile ZIPs, cancellation during extraction, resource exhaustion, browser compatibility, accessibility and CSP.
