@@ -1,5 +1,6 @@
 name: Browser-native CI
 on:
+  workflow_dispatch:
   pull_request:
     paths: ["web/**", ".github/workflows/browser-ci.yml"]
   push:
@@ -22,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+      - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run build
       - run: npx tsx scripts/generate-fixture.ts > /tmp/sustum-cbom.json
