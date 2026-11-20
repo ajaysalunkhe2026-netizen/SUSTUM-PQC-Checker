@@ -36,6 +36,7 @@ ZIP extraction and analysis run in a dedicated Web Worker. The browser app does 
 - Stable component references, application-to-component edges and internal duplicate/dangling-reference checks are implemented. A failed internal validation blocks the CBOM download.
 - Findings can be searched and filtered by confidence and algorithm. JSON, CSV and CycloneDX CBOM exports are available. CSV formula-leading values are neutralized.
 - Internal checks do not replace official JSON Schema validation or independent CBOM consumer interoperability; those remain release gates.
+- Direct npm dependency versions are pinned in `package.json`. A committed lockfile is still absent, so transitive dependency resolution is not yet fully reproducible; add and review `package-lock.json` before production release.
 
 ## Explicit exclusions
 
