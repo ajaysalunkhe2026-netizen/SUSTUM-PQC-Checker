@@ -1,6 +1,6 @@
 export type Primitive="signature"|"pke"|"key-agree"|"hash"|"unknown";
 export type Finding={id:string;algorithm:string;family:string;primitive:Primitive;purpose:string;file:string;line:number;evidence:string;confidence:"high"|"medium"|"low";quantumVulnerable:boolean|null;recommendation:string};
-export type Dependency={name:string;version:string;ecosystem:string;scope:string;source:string;evidence:"declared"|"locked"|"checksum"|"unknown"};
+export type Dependency={name:string;version:string;versionConstraint?:string;ecosystem:string;scope:string;source:string;evidence:"declared"|"locked"|"checksum"|"unknown"};
 export type Diagnostic={code:string;message:string;file?:string};
 export type ScanResult={findings:Finding[];dependencies:Dependency[];diagnostics:Diagnostic[];filesScanned:number;bytesScanned:number;durationMs:number};
 export type BomProperty={name:string;value:string};
@@ -26,9 +26,9 @@ export async function buildCbom(scan:ScanResult,project:string):Promise<Bom>{
  }
  const deps=[...scan.dependencies].sort((a,b)=>[a.ecosystem,a.name,a.version,a.source,a.scope].join("|").localeCompare([b.ecosystem,b.name,b.version,b.source,b.scope].join("|")));
  for(const d of deps){
-  const ref="urn:sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.source,d.scope].join("|"));if(seen.has(ref))continue;seen.add(ref);dependsOn.push(ref);
+  const ref="urn:sustum:dependency:"+await stableId([d.ecosystem,d.name,d.version,d.versionConstraint??"",d.source,d.scope].join("|"));if(seen.has(ref))continue;seen.add(ref);dependsOn.push(ref);
   const c:BomComponent={type:"library",name:d.name,"bom-ref":ref,properties:[
-   property("sustum:asset-kind","declared-dependency"),property("sustum:ecosystem",d.ecosystem),property("sustum:version-evidence",d.version),
+   property("sustum:asset-kind","declared-dependency"),property("sustum:ecosystem",d.ecosystem),property("sustum:version-evidence",d.version),...(d.versionConstraint?[property("sustum:version-constraint",d.versionConstraint)]:[]),
    property("sustum:dependency-scope",d.scope),property("sustum:manifest",d.source),property("sustum:evidence-kind",d.evidence),
    property("sustum:crypto-use-confirmed","false")
   ]};
