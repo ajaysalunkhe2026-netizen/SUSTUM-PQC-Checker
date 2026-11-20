@@ -20,15 +20,15 @@ worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
   if(allEntries.length>MAX_ENTRIES)throw new Error("Archive exceeds 5,000 total entries.");
   const seen=new Set<string>();
   for(const entry of allEntries){
-   if(entry.dir)continue;
    if(performance.now()-started>MAX_SCAN_MS)throw new Error("Scan exceeded the 30 second browser time budget.");
-   const raw=entry.unsafeOriginalName??entry.name,path=raw.replace(/\\/g,"/"),parts=path.split("/");
-   if(path.startsWith("/")||/^[a-zA-Z]:/.test(path)||parts.includes("..")||path.includes("\0")||parts.some(p=>p==="")){diagnostics.push({code:"UNSAFE_PATH",message:"Absolute, traversal, or malformed archive path rejected.",file:path.slice(0,240)});continue;}
+   const raw=entry.unsafeOriginalName??entry.name,path=raw.replace(/\\/g,"/"),isDirectory=entry.dir,checkedPath=isDirectory?path.replace(/\\/$/,""):path,parts=checkedPath.split("/");
+   if(!checkedPath||checkedPath.startsWith("/")||/^[a-zA-Z]:/.test(checkedPath)||parts.includes("..")||checkedPath.includes("\0")||parts.some(p=>p==="")){diagnostics.push({code:"UNSAFE_PATH",message:"Absolute, traversal, or malformed archive path rejected.",file:path.slice(0,240)});continue;}
    const normalized=parts.join("/");
    if(seen.has(normalized)){diagnostics.push({code:"DUPLICATE_PATH",message:"Duplicate normalized archive path rejected.",file:normalized.slice(0,240)});continue;}
    seen.add(normalized);
    const unix=entry.unixPermissions;
    if(typeof unix==="number"&&((unix>>>12)&0xf)===0xa){diagnostics.push({code:"SYMLINK",message:"Symbolic-link entry rejected.",file:normalized.slice(0,240)});continue;}
+   if(isDirectory)continue;
    const base=parts.at(-1)||"",ext=base.includes(".")?base.slice(base.lastIndexOf(".")).toLowerCase():"";
    if(!sourceExt.has(ext)&&!manifests.has(base))continue;
    candidates++;if(candidates>MAX_CANDIDATES)throw new Error("Archive exceeds 2,000 candidate source and manifest files.");
