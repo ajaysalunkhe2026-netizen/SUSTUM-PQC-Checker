@@ -55,7 +55,7 @@ def render_report(name, guideline, items, decision, reason, impact_data, sbom=No
     changes = "".join("<li>" + _e(path) + "</li>" for path in impact_data.get("part_changes", []))
     return """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SUSTUM — PQC inventory report</title>
+<title>SUSTUM PQC Checker — Lab advisory report</title>
 <style>
 body{font:15px system-ui,sans-serif;background:#f5f7fb;color:#172033;margin:0;padding:24px}
 main{max-width:1200px;margin:auto;background:white;padding:28px;border:1px solid #dce2ea;border-radius:12px}
@@ -66,7 +66,7 @@ th,td{padding:9px;border:1px solid #dce2ea;text-align:left;font-size:13px;vertic
 th{background:#f1f5f9}button{padding:10px 14px;background:#1d4ed8;color:white;border:0;border-radius:7px;cursor:pointer}
 .note{color:#526075;font-size:13px}
 </style></head><body><main>
-<h1>SUSTUM — Cryptographic inventory report</h1>
+<h1>SUSTUM PQC Checker — Lab advisory report</h1>
 <p><b>Input:</b> __NAME__ &nbsp; <b>Guideline profile:</b> __GUIDELINE__</p>
 <div class="metrics">
 <div class="metric">Total indicators<strong>__TOTAL__</strong></div>
