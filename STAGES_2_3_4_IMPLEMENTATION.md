@@ -11,6 +11,7 @@ Branch: `stage2-4-browser-native-clean`. Pull request: #5. Base: `fix/phase1-fin
 - Declared uncompressed sizes and suspicious compression ratios are checked before extracting candidate files; missing/invalid size metadata is rejected; actual extracted sizes are checked again.
 - Directory entries receive path normalization, traversal and duplicate checks before being skipped.
 - Rejects absolute paths, Windows drive paths, traversal, malformed path segments, duplicate normalized paths and Unix symlinks.
+- PQC indicators now recognize selected ML-KEM, ML-DSA and SLH-DSA API/name forms, including common parameter-set names and selected liboqs identifiers. These remain heuristic indicators and do not prove correct parameters, approved implementation, successful operation, hybrid deployment or production use; their quantum-impact indicator remains unknown.
 - RSA key generation remains primitive-undetermined until use is known; SHA-1 quantum impact is represented as unknown. Node `createHash("sha1")` is now an indicator.
 - Multiple same-line occurrences are retained as separate findings.
 - npm and Python version constraints are kept separate from resolved versions; requirements parsing handles common specifiers, extras, markers and direct references while surfacing unsupported pip directives.
