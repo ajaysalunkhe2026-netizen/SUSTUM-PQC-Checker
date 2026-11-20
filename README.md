@@ -30,6 +30,6 @@ A lab-oriented static-analysis prototype. It looks for selected cryptography-rel
 - Runtime behavior, binaries, live TLS traffic, remote services, HSMs, certificate stores and runtime-loaded keys are outside the stated scan scope.
 - Recommendations are advisory and require human review of protocol, implementation, interoperability, vendor and policy context.
 - CycloneDX-formatted output is a candidate inventory artifact; its presence does not establish complete CBOM coverage or compliance.
-- This repository does not claim production suitability, security certification, or zero false positives.
+- No detection-accuracy guarantee, security certification, or production suitability is claimed.
 
 For the maintained scope and detailed caveats, use the development-branch README linked above.
