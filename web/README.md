@@ -23,6 +23,7 @@ ZIP extraction and analysis run in a dedicated Web Worker. The browser app does 
 
 ## Detection and inventory limitations
 
+- PQC indicators recognize selected ML-KEM, ML-DSA and SLH-DSA API/name forms, including common parameter-set names and selected liboqs identifiers. These are heuristic indicators, not proof of correct parameter selection, approved implementation, successful operation, hybrid deployment or production use. Their quantum-impact field remains unknown rather than declaring a project quantum-safe.
 - RSA key generation is represented with an undetermined primitive until the actual operation is established; key generation alone does not prove encryption or signature use. SHA-1 findings carry an unknown quantum-impact indicator rather than a blanket safe/vulnerable boolean. Node.js `createHash("sha1")` is recognized as an indicator.
 - Heuristic API recognition is intentionally narrower than the Python scanner. No feature parity or complete-language coverage is claimed.
 - Comment masking is lightweight lexical handling, not a full parser. Regex literals, nested template interpolation and language-specific raw/triple-quoted string forms are not comprehensively parsed.
