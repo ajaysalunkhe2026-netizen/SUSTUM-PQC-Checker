@@ -1,5 +1,11 @@
 # SUSTUM PQC Checker
 
+Independent lab work by Ajay Salunkhe.
+
+Static indicators in source and dependency manifests → advisory mapping → CycloneDX-formatted JSON candidate.
+
+Not an estate inventory. Not a compliance certificate. Not a production security product.
+
 SUSTUM is an early-stage static-analysis prototype for identifying cryptography-related indicators in source files and dependency manifests, then producing an advisory inventory and a CycloneDX-formatted JSON candidate.
 
 ## Current scope
@@ -17,15 +23,16 @@ SUSTUM is an early-stage static-analysis prototype for identifying cryptography-
 
 ## Important limitations
 
-This is **not an enterprise-ready or production security product**. It is a static-analysis prototype.
+This is a static-analysis lab prototype. Findings are indicators, not proof of runtime use, cryptographic safety, or estate readiness.
 
-- Dependency parsing is format-specific and does not run package managers or independently resolve dependency graphs. npm lock entries and Go checksum records are inventory evidence; a go.sum record is not, by itself, proof of a direct dependency. Python project metadata is parsed without evaluating environment markers or resolving extras. Unsupported lockfile variants and malformed manifests may yield incomplete inventory.\n- It does not perform runtime, binary, network, TLS endpoint, certificate-store, HSM, cloud, or remote-service discovery.
+- Dependency parsing is format-specific and does not run package managers or independently resolve dependency graphs. npm lock entries and Go checksum records are inventory evidence; a go.sum record is not, by itself, proof of a direct dependency. Python project metadata is parsed without evaluating environment markers or resolving extras. Unsupported lockfile variants and malformed manifests may yield incomplete inventory.
+- It does not perform runtime, binary, network, TLS endpoint, certificate-store, HSM, cloud, or remote-service discovery.
 - A text match or dependency manifest entry does not prove that cryptography is used at runtime.
 - Language support is heuristic and API-pattern based, not a complete compiler-grade parser. C-like and selected configuration comment masking handles quoted comment markers and multi-line block comments, but it is not a full language lexer and does not model every language-specific string, preprocessor, or template construct. Python imported aliases, simple assigned function aliases, wrapper-body and same-file wrapper-callsite discovery, and bounded same-scope key-object-to-operation tracking are covered by focused tests; general interprocedural wrapper mapping outside the tested Python same-file case, cross-file call graphs, branch-sensitive data-flow, reflection, generated code, macros, custom providers, complex indirect calls, arbitrary Java/C/C++ aliases, most JavaScript/Go wrapper calls and unsupported APIs may still be missed.
 - Detection coverage is limited; absence of findings does not prove absence of cryptographic assets.
 - Recommendations are advisory and require protocol, implementation, interoperability, vendor and policy review.
 - Schema validation establishes structural conformance to the selected CycloneDX 1.6 JSON schema only; it does not certify the accuracy or completeness of crypto discovery or regulatory compliance.
-- No authentication, authorization, tenant isolation, persistence, rate limiting, or production deployment hardening is provided.
+- No authentication, authorization, tenant isolation, persistence, rate limiting, or deployment hardening for public exposure is provided.
 - No cryptographic keys or secret values should be uploaded.
 
 ## Requirements
@@ -88,13 +95,17 @@ The first evaluator uses a hand-authored smoke corpus. The second evaluates 61 c
 
 ## Project status
 
-The current branch is a development branch. Passing local tests will demonstrate only that the included test cases pass; it will not establish detection accuracy, schema compliance, production readiness, or enterprise suitability.
+The current branch is a development branch. Passing local tests will demonstrate only that the included test cases pass; it will not establish detection accuracy, schema compliance, or suitability for production use.
 
-## Industry-grade CBOM engineering status\n\nAn architecture audit and phased delivery/acceptance plan is recorded in [INDUSTRY_GRADE_ROADMAP.md](INDUSTRY_GRADE_ROADMAP.md). A reviewer protocol and reproduction guide is in [INDEPENDENT_VALIDATION_HANDOFF.md](INDEPENDENT_VALIDATION_HANDOFF.md). This is a pre-release validation candidate, not a complete dependency resolver or an industry-validated CBOM product.\n\n## Next engineering milestones
+## Industry-grade CBOM engineering status
+
+An architecture audit and phased delivery/acceptance plan is recorded in [INDUSTRY_GRADE_ROADMAP.md](INDUSTRY_GRADE_ROADMAP.md). A reviewer protocol and reproduction guide is in [INDEPENDENT_VALIDATION_HANDOFF.md](INDEPENDENT_VALIDATION_HANDOFF.md). This is a pre-release validation candidate, not a complete dependency resolver or an independently validated CBOM product.
+
+## Next engineering milestones
 
 1. Obtain independent second-reviewer sign-off for the 61 source-backed cases and expand toward 100+ cases, including non-test application code.
 2. Add parser-backed analysis, interprocedural alias/wrapper resolution and bounded data-flow analysis.
 3. Extend dependency graph resolution, lockfile and transitive dependency intelligence.
 4. Verify CBOM component completeness and interoperability against independently produced real-project inventories and CycloneDX tooling.
 5. Build purpose-aware migration plans with explicit protocol, key-use and operational dependencies.
-6. Add authentication, authorization/RBAC, audit logging, tenant isolation, quotas, storage isolation and deployment hardening before shared or hosted deployment.
+6. Treat authentication, authorization/RBAC, audit logging, tenant isolation, quotas, storage isolation and deployment hardening as future prerequisites before any shared or hosted deployment.
