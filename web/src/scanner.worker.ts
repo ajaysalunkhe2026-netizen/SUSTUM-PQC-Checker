@@ -33,13 +33,14 @@ worker.onmessage=async(event:MessageEvent<ScanMessage>)=>{
    if(!sourceExt.has(ext)&&!manifests.has(base))continue;
    candidates++;if(candidates>MAX_CANDIDATES)throw new Error("Archive exceeds 2,000 candidate source and manifest files.");
    const declared=entry._data?.uncompressedSize,compressed=entry._data?.compressedSize;
-   if(typeof declared==="number"&&declared>MAX_FILE){diagnostics.push({code:"FILE_LIMIT",message:"Declared uncompressed file size exceeds 2 MiB; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
-   if(typeof declared==="number"&&typeof compressed==="number"&&declared>1024*1024&&compressed>0&&declared/compressed>MAX_RATIO){diagnostics.push({code:"COMPRESSION_RATIO",message:"Suspicious compression ratio exceeds 200:1; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
-   if(typeof declared==="number"&&bytesScanned+declared>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate declared extracted data.");
+   if(typeof declared!=="number"||!Number.isSafeInteger(declared)||declared<0){diagnostics.push({code:"SIZE_METADATA",message:"Missing or invalid uncompressed-size metadata; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
+   if(declared>MAX_FILE){diagnostics.push({code:"FILE_LIMIT",message:"Declared uncompressed file size exceeds 2 MiB; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
+   if(typeof compressed==="number"&&declared>1024*1024&&compressed>0&&declared/compressed>MAX_RATIO){diagnostics.push({code:"COMPRESSION_RATIO",message:"Suspicious compression ratio exceeds 200:1; entry skipped before extraction.",file:normalized.slice(0,240)});continue;}
+   if(bytesScanned+declared>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate declared extracted data.");
    const bytes=await entry.async("uint8array");
    if(performance.now()-started>MAX_SCAN_MS)throw new Error("Scan exceeded the 30 second browser time budget during extraction.");
    if(bytes.byteLength>MAX_FILE){diagnostics.push({code:"FILE_LIMIT",message:"Actual extracted file size exceeds 2 MiB; entry skipped.",file:normalized.slice(0,240)});continue;}
-   if(typeof declared==="number"&&bytes.byteLength!==declared){diagnostics.push({code:"SIZE_MISMATCH",message:"Extracted size differs from ZIP metadata; entry skipped.",file:normalized.slice(0,240)});continue;}
+   if(bytes.byteLength!==declared){diagnostics.push({code:"SIZE_MISMATCH",message:"Extracted size differs from ZIP metadata; entry skipped.",file:normalized.slice(0,240)});continue;}
    bytesScanned+=bytes.byteLength;if(bytesScanned>MAX_TOTAL)throw new Error("Candidate files exceed 50 MiB aggregate extracted data.");
    const source=new TextDecoder("utf-8",{fatal:false}).decode(bytes);filesScanned++;
    if(manifests.has(base))parseManifest(normalized,source,dependencies,diagnostics);
